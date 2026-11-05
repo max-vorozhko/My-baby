@@ -1,5 +1,5 @@
 import { baseFields, db, getSession, nowISO, setSetting, getSetting } from './index'
-import type { BottleContent, BreastSide, Feeding, Sleep, SleepKind } from './types'
+import type { BaseRecord, BottleContent, BreastSide, Feeding, SkinCareKind, SkinCheck, Sleep, SleepKind } from './types'
 import { defaultKind } from '@/lib/sleep'
 import { OBSERVE_DAYS, activeObservation } from '@/lib/food'
 import type { FoodIntroStatus, MealItem, ReactionType } from './types'
@@ -177,4 +177,37 @@ export async function addReaction(input: {
 
 export async function deleteReaction(id: string) {
   await db.reactions.update(id, touch({ deleted_at: nowISO() }))
+}
+
+// ---------- Шкіра ----------
+
+export async function setSkinModule(childId: string, on: boolean) {
+  await db.children.update(childId, touch({ skin_module: on }))
+}
+
+export async function getSkinCheck(childId: string, date: string) {
+  return db.skinChecks.where('[child_id+date]').equals([childId, date]).filter((c) => !c.deleted_at).first()
+}
+
+/** Один огляд на день: повторне збереження оновлює запис. */
+export async function saveSkinCheck(childId: string, date: string, data: Omit<SkinCheck, keyof BaseRecord | 'child_id' | 'date'>) {
+  const s = await session()
+  await db.transaction('rw', db.skinChecks, async () => {
+    const existing = await getSkinCheck(childId, date)
+    if (existing) await db.skinChecks.update(existing.id, touch(data))
+    else await db.skinChecks.add({ ...baseFields(s), child_id: childId, date, ...data })
+  })
+}
+
+export async function addSkinCare(childId: string, kind: SkinCareKind, product = '', at = new Date()) {
+  const s = await session()
+  await db.skinCare.add({ ...baseFields(s), child_id: childId, at: at.toISOString(), kind, product, note: '' })
+  if (kind === 'prescribed' && product) {
+    const list = (await getSetting<string[]>('prescribedProducts')) ?? []
+    if (!list.includes(product)) await setSetting('prescribedProducts', [product, ...list].slice(0, 8))
+  }
+}
+
+export async function deleteSkinCare(id: string) {
+  await db.skinCare.update(id, touch({ deleted_at: nowISO() }))
 }

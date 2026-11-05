@@ -36,3 +36,9 @@ export const IconPhone = (p: SVGProps<SVGSVGElement>) => (
 export const IconClose = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M18 6 6 18M6 6l12 12" /></svg>
 )
+export const IconHeart = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M12 20s-7-4.4-9-9a4.8 4.8 0 0 1 9-3 4.8 4.8 0 0 1 9 3c-2 4.6-9 9-9 9Z" /></svg>
+)
+export const IconDrop = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z" /></svg>
+)

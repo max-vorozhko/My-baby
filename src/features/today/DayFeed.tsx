@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react'
-import type { Child, Feeding, Meal, Reaction, Sleep } from '@/db/types'
-import { useFeedingsSince, useMealsSince, useReactionsSince, useSleepsSince } from '@/db/hooks'
+import type { Child, Feeding, Meal, Reaction, SkinCare, Sleep } from '@/db/types'
+import { useFeedingsSince, useMealsSince, useReactionsSince, useSkinCareSince, useSleepsSince } from '@/db/hooks'
 import { FOOD_BY_ID } from '@/data/foods'
-import { deleteMeal, deleteReaction } from '@/db/actions'
+import { deleteMeal, deleteReaction, deleteSkinCare } from '@/db/actions'
 import { REACTION_LABEL } from '@/features/food/ReactionSheet'
 import { Sheet } from '@/ui/Sheet'
 import { Button } from '@/ui/kit'
 import { DAY_MS, formatDuration, formatTime, useNow } from '@/lib/time'
-import { IconBottle, IconFood, IconSleep } from '@/ui/icons'
+import { IconBottle, IconDrop, IconFood, IconSleep } from '@/ui/icons'
 import { Card } from '@/ui/kit'
 import { SleepEditSheet } from '@/features/sleep/SleepEditSheet'
 import { FeedingEditSheet } from '@/features/feeding/FeedingEditSheet'
 import { feedingTitle } from '@/features/feeding/labels'
 
-type Item = { t: string; sleep?: Sleep; feeding?: Feeding; meal?: Meal; reaction?: Reaction }
+type Item = { t: string; sleep?: Sleep; feeding?: Feeding; meal?: Meal; reaction?: Reaction; care?: SkinCare }
+
+const CARE_LABEL = { emollient: 'Крем-емолент', bath: 'Купання', prescribed: 'Засіб від лікаря' } as const
 
 const mealTitle = (m: Meal) => m.items.map((i) => FOOD_BY_ID.get(i.food_id)?.name_uk ?? '?').join(', ')
 
@@ -29,6 +31,7 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
   const [editFeeding, setEditFeeding] = useState<Feeding | null>(null)
   const meals = useMealsSince(child.id, dayStart)
   const reactions = useReactionsSince(child.id, dayStart)
+  const care = useSkinCareSince(child.id, dayStart)
   const [view, setView] = useState<{ meal?: Meal; reaction?: Reaction } | null>(null)
 
   const items: Item[] = []
@@ -46,6 +49,7 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
     for (const m of meals) if (inDay(m.at)) items.push({ t: m.at, meal: m })
     for (const r of reactions) if (inDay(r.at)) items.push({ t: r.at, reaction: r })
   }
+  if (show === 'all') for (const c of care) if (inDay(c.at)) items.push({ t: c.at, care: c })
   items.sort((a, b) => b.t.localeCompare(a.t))
 
   if (items.length === 0) {
@@ -55,7 +59,20 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
   return (
     <>
       <ul className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
-        {items.map(({ sleep, feeding, meal, reaction }) => {
+        {items.map(({ sleep, feeding, meal, reaction, care: c }) => {
+          if (c) {
+            return (
+              <li key={c.id}>
+                <button onClick={() => confirm(`Видалити запис «${CARE_LABEL[c.kind]}»?`) && deleteSkinCare(c.id)} className="flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sleep-soft text-sleep"><IconDrop width={20} height={20} /></span>
+                  <span className="flex-1">
+                    <span className="block font-semibold">{CARE_LABEL[c.kind]}{c.product && ` · ${c.product}`}</span>
+                    <span className="block text-sm text-muted">{formatTime(c.at)}</span>
+                  </span>
+                </button>
+              </li>
+            )
+          }
           if (meal) {
             return (
               <li key={meal.id}>

@@ -13,6 +13,7 @@ import { FeedingSheet } from '@/features/feeding/FeedingSheet'
 import { feedingTitle } from '@/features/feeding/labels'
 import { InstallHint } from './InstallHint'
 import { DayFeed } from './DayFeed'
+import { SkinToday } from '@/features/health/skin/SkinToday'
 
 function greeting(h = new Date().getHours()) {
   if (h < 5) return 'Доброї ночі'
@@ -64,6 +65,8 @@ export function Today({ child }: { child: Child }) {
           </span>
         </button>
       </div>
+
+      {child.skin_module && <SkinToday child={child} />}
 
       <InstallHint />
 

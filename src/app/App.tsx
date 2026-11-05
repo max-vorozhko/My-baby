@@ -9,7 +9,9 @@ import { Today } from '@/features/today/Today'
 import { FoodPage } from '@/features/food/FoodPage'
 import { TriedPage } from '@/features/food/TriedPage'
 import { SleepPage } from '@/features/sleep/SleepPage'
-import { DevelopmentPage } from '@/features/development/DevelopmentPage'
+import { HealthPage } from '@/features/health/HealthPage'
+import { SkinPage } from '@/features/health/skin/SkinPage'
+import { SkinAdvicePage } from '@/features/health/skin/SkinAdvicePage'
 import { MorePage } from '@/features/more/MorePage'
 import { SosPage } from '@/features/sos/SosPage'
 
@@ -33,7 +35,10 @@ export default function App() {
           <Route path="food" element={<FoodPage child={child} />} />
           <Route path="food/tried" element={<TriedPage child={child} />} />
           <Route path="sleep" element={<SleepPage child={child} />} />
-          <Route path="development" element={<DevelopmentPage />} />
+          <Route path="health" element={<HealthPage child={child} />} />
+          <Route path="health/skin" element={<SkinPage child={child} />} />
+          <Route path="health/skin/advice" element={<SkinAdvicePage />} />
+          <Route path="development" element={<Navigate to="/health" replace />} />
           <Route path="more" element={<MorePage child={child} theme={theme} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

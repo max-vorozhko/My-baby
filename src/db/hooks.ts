@@ -44,3 +44,18 @@ export function useReactionsSince(childId: string, since: number) {
     return rows.filter((r) => !r.deleted_at)
   }, [childId, since]) ?? []
 }
+
+export function useSkinChecksSince(childId: string, sinceDate: string) {
+  return useLiveQuery(async () => {
+    const rows = await db.skinChecks.where('[child_id+date]').between([childId, sinceDate], [childId, '￿']).toArray()
+    return rows.filter((c) => !c.deleted_at)
+  }, [childId, sinceDate]) ?? []
+}
+
+export function useSkinCareSince(childId: string, since: number) {
+  return useLiveQuery(async () => {
+    const from = new Date(since).toISOString()
+    const rows = await db.skinCare.where('[child_id+at]').between([childId, from], [childId, '￿']).toArray()
+    return rows.filter((c) => !c.deleted_at)
+  }, [childId, since]) ?? []
+}

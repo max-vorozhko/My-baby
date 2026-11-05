@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { exportAll, updateChild, wipeAll } from '@/db'
+import { setSkinModule } from '@/db/actions'
 import type { Child } from '@/db/types'
 import type { ThemePref } from '@/lib/theme'
 import { isStandalone, requestPersistence, useInstallPrompt } from '@/lib/storage'
@@ -67,6 +68,18 @@ export function MorePage({ child, theme }: { child: Child; theme: { pref: ThemeP
         <Segmented<ThemePref> value={theme.pref} onChange={theme.setPref} options={[
           { value: 'auto', label: 'Авто' }, { value: 'light', label: 'Світла' }, { value: 'dark', label: 'Нічна' },
         ]} />
+      </Card>
+
+      <Card>
+        <h2 className="mb-1 text-lg font-semibold">Модулі</h2>
+        <label className="flex min-h-12 items-center justify-between gap-3">
+          <span>
+            <span className="block font-medium">Шкіра</span>
+            <span className="block text-sm text-muted">Суха шкіра, атопічний дерматит</span>
+          </span>
+          <input type="checkbox" role="switch" className="h-6 w-6 accent-[var(--color-accent)]"
+            checked={!!child.skin_module} onChange={(e) => setSkinModule(child.id, e.target.checked)} />
+        </label>
       </Card>
 
       <Card>

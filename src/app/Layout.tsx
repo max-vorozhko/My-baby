@@ -1,12 +1,12 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { IconFood, IconGrowth, IconMore, IconSleep, IconToday } from '@/ui/icons'
+import { IconFood, IconHeart, IconMore, IconSleep, IconToday } from '@/ui/icons'
 import { SyncBadge } from './SyncBadge'
 
 const tabs = [
   { to: '/', label: 'Сьогодні', Icon: IconToday, end: true },
   { to: '/food', label: 'Їжа', Icon: IconFood },
   { to: '/sleep', label: 'Сон', Icon: IconSleep },
-  { to: '/development', label: 'Розвиток', Icon: IconGrowth },
+  { to: '/health', label: "Здоров'я", Icon: IconHeart },
   { to: '/more', label: 'Ще', Icon: IconMore },
 ]
 

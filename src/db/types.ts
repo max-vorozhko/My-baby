@@ -41,6 +41,8 @@ export interface Child extends BaseRecord {
   /** На скільки тижнів раніше народився (0 — вчасно). Для коригованого віку. */
   preterm_weeks: number
   photo: Blob | null
+  /** Модуль «Шкіра» (суха шкіра / атопічний дерматит) увімкнено. */
+  skin_module?: boolean
 }
 
 export type SleepKind = 'nap' | 'night'
@@ -104,6 +106,35 @@ export interface Meal extends BaseRecord {
   child_id: string
   at: ISODateTime
   items: MealItem[]
+  note: string
+}
+
+export type ItchLevel = 0 | 1 | 2 | 3
+export type SkinZone = 'face' | 'neck' | 'elbows' | 'knees' | 'torso' | 'arms' | 'legs' | 'bottom' | 'scalp'
+export type SkinSign = 'dry' | 'red' | 'wet' | 'crusts' | 'bumps'
+export type SkinTrigger =
+  | 'new_food' | 'detergent' | 'cosmetics' | 'overheat' | 'fabric' | 'teeth' | 'illness' | 'pets' | 'dust' | 'weather'
+
+/** Щоденний огляд шкіри: один запис на дитину на календарний день. */
+export interface SkinCheck extends BaseRecord {
+  child_id: string
+  date: ISODate
+  itch: ItchLevel
+  zones: SkinZone[]
+  signs: SkinSign[]
+  triggers: SkinTrigger[]
+  photo: Blob | null
+  note: string
+}
+
+export type SkinCareKind = 'emollient' | 'bath' | 'prescribed'
+
+/** Догляд: крем-емолент, купання, засіб, призначений лікарем (лише назва — без доз). */
+export interface SkinCare extends BaseRecord {
+  child_id: string
+  at: ISODateTime
+  kind: SkinCareKind
+  product: string
   note: string
 }
 
