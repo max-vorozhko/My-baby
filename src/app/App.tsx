@@ -29,8 +29,8 @@ export default function App() {
       ) : (
         <Route element={<Layout />}>
           <Route index element={<Today child={child} />} />
-          <Route path="food" element={<FoodPage />} />
-          <Route path="sleep" element={<SleepPage />} />
+          <Route path="food" element={<FoodPage child={child} />} />
+          <Route path="sleep" element={<SleepPage child={child} />} />
           <Route path="development" element={<DevelopmentPage />} />
           <Route path="more" element={<MorePage child={child} theme={theme} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
