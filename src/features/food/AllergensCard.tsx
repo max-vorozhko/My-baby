@@ -4,6 +4,7 @@ import { allergenStates, ALLERGEN_REMIND_DAYS } from '@/lib/food'
 import { DAY_MS, useNow } from '@/lib/time'
 import { daysWord } from '@/lib/age'
 import { Card } from '@/ui/kit'
+import { Disclaimer } from '@/ui/Disclaimer'
 import { STATUS_DOT, STATUS_LABEL } from './status'
 import { useState } from 'react'
 
@@ -48,7 +49,8 @@ export function AllergensCard({ child, onFood }: { child: Child; onFood: (id: st
           )
         })}
       </ul>
-      <p className="mt-2 text-xs text-muted">Нагадування — якщо введений алерген не давали понад {ALLERGEN_REMIND_DAYS} днів. Чернетка, чекає перевірки педіатром.</p>
+      <p className="mt-2 text-xs text-muted">Нагадування — якщо введений алерген не давали понад {ALLERGEN_REMIND_DAYS} днів.</p>
+      <Disclaimer compact className="mt-2" />
     </Card>
   )
 }

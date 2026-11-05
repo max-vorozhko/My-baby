@@ -34,14 +34,16 @@
   --color-sos: #c95656;
 }
 
-html, body, #root { min-height: 100%; }
-body {
-  margin: 0;
-  background: var(--color-bg);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  -webkit-tap-highlight-color: transparent;
-  overscroll-behavior-y: none;
+@layer base {
+  html, body, #root { min-height: 100%; }
+  body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  input, select, button, textarea { font: inherit; color: inherit; }
+  input[type="date"] { min-height: 48px; }
 }
-input, select, button, textarea { font: inherit; color: inherit; }
-input[type="date"] { min-height: 48px; }

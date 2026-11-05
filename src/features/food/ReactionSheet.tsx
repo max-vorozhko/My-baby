@@ -8,6 +8,7 @@ import { fromLocalInput, toLocalInput } from '@/lib/time'
 import { IconPhone } from '@/ui/icons'
 import { Sheet } from '@/ui/Sheet'
 import { Button, Field, Segmented, inputCls } from '@/ui/kit'
+import { Disclaimer } from '@/ui/Disclaimer'
 
 const TYPES: { value: ReactionType; label: string }[] = [
   { value: 'rash', label: 'Висип' }, { value: 'tummy', label: 'Животик' }, { value: 'stool', label: 'Стілець' },
@@ -103,6 +104,7 @@ export function ReactionSheet({ child, open, foodId, onClose }: { child: Child; 
             </Field>
             <Field label="Нотатка"><input className={inputCls} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Необов'язково" /></Field>
             <Button className="w-full" onClick={save}>Зберегти</Button>
+            <Disclaimer compact />
           </>
         )}
       </div>

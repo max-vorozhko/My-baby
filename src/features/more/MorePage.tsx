@@ -5,6 +5,7 @@ import type { ThemePref } from '@/lib/theme'
 import { isStandalone, requestPersistence, useInstallPrompt } from '@/lib/storage'
 import { ChildForm, isDraftValid, type ChildDraft } from '@/features/profile/ChildForm'
 import { Button, Card, PageTitle, Segmented } from '@/ui/kit'
+import { Disclaimer } from '@/ui/Disclaimer'
 
 function toDraft(c: Child): ChildDraft {
   return {
@@ -45,7 +46,7 @@ export function MorePage({ child, theme }: { child: Child; theme: { pref: ThemeP
   const wipe = async () => {
     if (!confirm('Видалити всі дані з цього телефона? Це не можна скасувати.')) return
     await wipeAll()
-    location.replace('/')
+    location.replace(import.meta.env.BASE_URL)
   }
 
   return (
@@ -85,9 +86,8 @@ export function MorePage({ child, theme }: { child: Child; theme: { pref: ThemeP
         <Button variant="ghost" className="w-full text-sos" onClick={wipe}>Видалити всі дані</Button>
       </Card>
 
-      <p className="px-2 text-center text-xs text-muted">
-        My Baby v0.1 · Застосунок не замінює лікаря. У разі небезпеки телефонуйте 103.
-      </p>
+      <Disclaimer />
+      <p className="px-2 text-center text-xs text-muted">My Baby v0.1 · У разі небезпеки телефонуйте 103.</p>
     </div>
   )
 }

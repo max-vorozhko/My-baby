@@ -41,6 +41,7 @@ export function ObservationCard({ child, onReaction, onFood }: {
           <>
             <p className="mt-2 text-sm">
               День {p.day} з {OBSERVE_DAYS}. Давайте цей продукт і слідкуйте за шкірою, животиком і стільцем. Залишилось {formatDuration(p.leftMs)}.
+              <span className="mt-1 block text-xs text-muted">Лише для орієнтиру — схему введення прикорму погодьте з педіатром.</span>
             </p>
             <div className="mt-3 flex gap-2">
               <button onClick={() => onReaction(active.food_id)} className="min-h-12 flex-1 rounded-2xl border border-sos bg-surface font-semibold">Помітили реакцію</button>

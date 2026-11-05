@@ -4,7 +4,11 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
 
+// BASE_PATH=/My-baby/ для GitHub Pages; локально — корінь.
+const base = process.env.BASE_PATH ?? '/'
+
 export default defineConfig({
+  base,
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
@@ -19,8 +23,9 @@ export default defineConfig({
         short_name: 'My Baby',
         description: 'Прикорм, сон і розвиток малюка 6–12 міс',
         lang: 'uk',
-        start_url: '/',
-        scope: '/',
+        start_url: base,
+        scope: base,
+        id: base,
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#fdf8f3',
@@ -33,7 +38,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,json,woff2}'],
-        navigateFallback: '/index.html',
+        navigateFallback: `${base}index.html`,
       },
     }),
   ],

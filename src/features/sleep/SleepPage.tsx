@@ -6,6 +6,7 @@ import { getAge } from '@/lib/age'
 import { daySummary, transitionHint } from '@/lib/sleep'
 import { DAY_MS, formatDayLabel, formatDuration, shortDayLabel, startOfDay, useNow } from '@/lib/time'
 import { Button, Card, PageTitle } from '@/ui/kit'
+import { Disclaimer } from '@/ui/Disclaimer'
 import { SleepCard } from './SleepCard'
 import { SleepEditSheet } from './SleepEditSheet'
 import { DayFeed } from '@/features/today/DayFeed'
@@ -97,7 +98,8 @@ export function SleepPage({ child }: { child: Child }) {
                 ))}
               </tbody>
             </table>
-            <p className="mt-2 text-xs text-muted">Орієнтовні діапазони, кожна дитина індивідуальна. Чернетка — чекає перевірки педіатром.</p>
+            <p className="mt-2 text-xs text-muted">Орієнтовні діапазони, кожна дитина індивідуальна.</p>
+            <Disclaimer compact className="mt-2" />
           </>
         )}
       </Card>

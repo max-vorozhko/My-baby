@@ -28,11 +28,11 @@ export function Onboarding() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-4 pt-[max(env(safe-area-inset-top),24px)] pb-[max(env(safe-area-inset-bottom),16px)]">
+    <main className="mx-auto flex min-h-dvh max-w-lg flex-col px-4 pt-[max(env(safe-area-inset-top),24px)] pb-[max(env(safe-area-inset-bottom),16px)]">
       {step === 0 ? (
         <>
           <div className="flex-1">
-            <img src="/icon.svg" alt="" className="h-20 w-20" />
+            <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="h-20 w-20" />
             <h1 className="mt-6 text-3xl font-bold">Вітаємо в My Baby</h1>
             <p className="mt-3 text-lg text-muted">
               Що дати сьогодні, коли вкладати наступний сон і чи все в нормі — за 1–2 тапи, навіть без інтернету.
@@ -40,8 +40,9 @@ export function Onboarding() {
             <div className="mt-6 rounded-3xl bg-accent-soft p-4">
               <p className="font-semibold">Важливо</p>
               <p className="mt-1 text-sm">
-                Застосунок не замінює лікаря і не ставить діагнозів. Якщо дитині важко дихати, набрякає обличчя або
-                висока температура — одразу телефонуйте 103.
+                Застосунок не надає медичних рекомендацій і не замінює лікаря. Уся інформація — лише для орієнтиру:
+                обов'язково радьтеся з педіатром. Якщо дитині важко дихати, набрякає обличчя або висока температура —
+                одразу телефонуйте 103.
               </p>
               <label className="mt-3 flex min-h-12 items-center gap-3">
                 <input
@@ -50,7 +51,7 @@ export function Onboarding() {
                   onChange={(e) => setAgreed(e.target.checked)}
                   className="h-6 w-6 accent-[var(--color-accent)]"
                 />
-                <span className="text-sm">Зрозуміло. Погоджуюсь, що дані зберігаються на цьому телефоні.</span>
+                <span className="text-sm">Зрозуміло. Погоджуюсь, що це не медична порада, а дані зберігаються на цьому телефоні.</span>
               </label>
             </div>
           </div>
@@ -71,6 +72,6 @@ export function Onboarding() {
           </div>
         </>
       )}
-    </div>
+    </main>
   )
 }

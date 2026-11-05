@@ -7,6 +7,7 @@ import { activeObservation, latestIntros, statusOf } from '@/lib/food'
 import { Sheet } from '@/ui/Sheet'
 import { Button } from '@/ui/kit'
 import { STATUS_CLS, STATUS_LABEL } from './status'
+import { Disclaimer } from '@/ui/Disclaimer'
 
 export function FoodDetailSheet({
   child, foodId, onClose, onReaction, onMeal,
@@ -61,7 +62,7 @@ export function FoodDetailSheet({
             <Button className="w-full" variant="secondary" onClick={() => onReaction(food.id)}>Записати реакцію</Button>
           )}
         </div>
-        <p className="text-xs text-muted">Поради — чернетка, чекають перевірки педіатром.</p>
+        <Disclaimer compact />
       </div>
     </Sheet>
   )
