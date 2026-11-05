@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-bg: #fdf8f3;
+  --color-surface: #ffffff;
+  --color-ink: #3b2f26;
+  --color-muted: #7a6a5d;
+  --color-line: #eadfd4;
+  --color-accent: #e07a52;
+  --color-accent-soft: #fbe3d6;
+  --color-sleep: #6b6fc7;
+  --color-sleep-soft: #e4e5f8;
+  --color-food: #4f9d69;
+  --color-food-soft: #ddf0e2;
+  --color-sos: #d33a3a;
+}
+
+/* Нічна тема: приглушена, без яскравого білого (ТЗ 7). */
+.dark {
+  --color-bg: #17141f;
+  --color-surface: #221e2c;
+  --color-ink: #d9d2c8;
+  --color-muted: #9a91a3;
+  --color-line: #332d3f;
+  --color-accent: #c9805f;
+  --color-accent-soft: #3a2a27;
+  --color-sleep: #9a9de0;
+  --color-sleep-soft: #2a2a44;
+  --color-food: #7cb98f;
+  --color-food-soft: #213129;
+  --color-sos: #c95656;
+}
+
+@layer base {
+  html, body, #root { min-height: 100%; }
+  body {
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+  input, select, button, textarea { font: inherit; color: inherit; }
+  input[type="date"] { min-height: 48px; }
+}

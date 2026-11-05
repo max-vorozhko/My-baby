@@ -1,0 +1,41 @@
+import { Link } from 'react-router-dom'
+import type { Child } from '@/db/types'
+import { setSkinModule } from '@/db/actions'
+import { useSkinChecksSince } from '@/db/hooks'
+import { ITCH_LABEL } from '@/data/skin'
+import { isoDate } from '@/lib/skin'
+import { startOfDay } from '@/lib/time'
+import { Button, Card, ComingSoon, PageTitle } from '@/ui/kit'
+
+export function HealthPage({ child }: { child: Child }) {
+  const todayDate = isoDate(startOfDay())
+  const checks = useSkinChecksSince(child.id, todayDate)
+  const today = checks[0]
+
+  return (
+    <div className="space-y-4">
+      <PageTitle sub="Шкіра, розвиток, ріст">Здоров'я</PageTitle>
+
+      {child.skin_module ? (
+        <Link to="/health/skin" className="flex min-h-20 items-center justify-between rounded-3xl bg-sleep-soft px-4">
+          <span>
+            <span className="block text-lg font-semibold">Шкіра</span>
+            <span className="block text-sm text-muted">{today ? `Сьогодні: свербіж ${ITCH_LABEL[today.itch].toLowerCase()}` : 'Огляд сьогодні ще не зроблено'}</span>
+          </span>
+          <span className="text-accent">→</span>
+        </Link>
+      ) : (
+        <Card>
+          <p className="font-semibold">Суха шкіра чи атопічний дерматит?</p>
+          <p className="mt-1 text-sm text-muted">Щоденний огляд, догляд у 1 тап і збіги з їжею та сном — щоб було що показати лікарю.</p>
+          <Button className="mt-3 w-full" onClick={() => setSkinModule(child.id, true)}>Увімкнути модуль «Шкіра»</Button>
+        </Card>
+      )}
+
+      <div className="space-y-3 opacity-70">
+        <ComingSoon stage="v0.2" title="Віхи і ігри" items={['Віхи за місяцями без оцінок «відстає»', '3–5 ігор на тиждень']} />
+        <ComingSoon stage="v0.2" title="Ріст і вага" items={['Графіки на кривих ВООЗ']} />
+      </div>
+    </div>
+  )
+}
