@@ -7,6 +7,7 @@ import { Layout } from './Layout'
 import { Onboarding } from '@/features/onboarding/Onboarding'
 import { Today } from '@/features/today/Today'
 import { FoodPage } from '@/features/food/FoodPage'
+import { TriedPage } from '@/features/food/TriedPage'
 import { SleepPage } from '@/features/sleep/SleepPage'
 import { DevelopmentPage } from '@/features/development/DevelopmentPage'
 import { MorePage } from '@/features/more/MorePage'
@@ -30,6 +31,7 @@ export default function App() {
         <Route element={<Layout />}>
           <Route index element={<Today child={child} />} />
           <Route path="food" element={<FoodPage child={child} />} />
+          <Route path="food/tried" element={<TriedPage child={child} />} />
           <Route path="sleep" element={<SleepPage child={child} />} />
           <Route path="development" element={<DevelopmentPage />} />
           <Route path="more" element={<MorePage child={child} theme={theme} />} />

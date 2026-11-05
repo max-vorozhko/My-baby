@@ -27,7 +27,7 @@ export function ChildForm({
   return (
     <div className="space-y-5">
       <Field label="Ім'я">
-        <input className={inputCls} value={value.name} autoFocus={autoFocus} onChange={(e) => set('name', e.target.value)} placeholder="Наприклад, Соломійка" />
+        <input className={inputCls} value={value.name} autoFocus={autoFocus} onChange={(e) => set('name', e.target.value)} placeholder="Наприклад, Марʼянчик" />
       </Field>
       <Field label="Дата народження">
         <input type="date" className={inputCls} max={todayISODate()} value={value.birth_date} onChange={(e) => set('birth_date', e.target.value)} />

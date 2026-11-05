@@ -1,6 +1,8 @@
 import { baseFields, db, getSession, nowISO, setSetting, getSetting } from './index'
 import type { BottleContent, BreastSide, Feeding, Sleep, SleepKind } from './types'
 import { defaultKind } from '@/lib/sleep'
+import { OBSERVE_DAYS, activeObservation } from '@/lib/food'
+import type { FoodIntroStatus, MealItem, ReactionType } from './types'
 
 async function session() {
   const s = await getSession()
@@ -114,4 +116,65 @@ export async function saveFeeding(id: string, patch: Partial<Pick<Feeding, 'star
 
 export async function deleteFeeding(id: string) {
   await db.feedings.update(id, touch({ deleted_at: nowISO() }))
+}
+
+// ---------- Прикорм ----------
+
+
+export async function getIntros(childId: string) {
+  return db.foodIntros.where('child_id').equals(childId).filter((i) => !i.deleted_at).toArray()
+}
+
+/** Почати вводити продукт: 3 доби спостереження + перша проба в журналі їжі. */
+export async function startIntro(childId: string, foodId: string, amount: number | null = null) {
+  const at = new Date()
+  const s = await session()
+  return db.transaction('rw', [db.foodIntros, db.meals], async () => {
+    const active = activeObservation(await getIntros(childId))
+    if (active) throw new Error('Триває спостереження за іншим продуктом')
+    await db.foodIntros.add({
+      ...baseFields(s), child_id: childId, food_id: foodId, started_at: at.toISOString(),
+      observe_until: new Date(at.getTime() + OBSERVE_DAYS * 24 * 3600_000).toISOString(), status: 'observing',
+    })
+    await db.meals.add({
+      ...baseFields(s), child_id: childId, at: at.toISOString(),
+      items: [{ food_id: foodId, amount, unit: amount ? 'spoon' : null, liked: null }], note: 'Перша проба',
+    })
+  })
+}
+
+export async function resolveIntro(id: string, status: Exclude<FoodIntroStatus, 'observing'>) {
+  await db.foodIntros.update(id, touch({ status }))
+}
+
+export async function addMeal(childId: string, items: MealItem[], at = new Date(), note = '') {
+  const s = await session()
+  await db.meals.add({ ...baseFields(s), child_id: childId, at: at.toISOString(), items, note })
+}
+
+export async function deleteMeal(id: string) {
+  await db.meals.update(id, touch({ deleted_at: nowISO() }))
+}
+
+/** Реакція. Якщо продукт зараз під спостереженням — його статус стає «реакція». */
+export async function addReaction(input: {
+  childId: string; foodId: string | null; type: ReactionType; severity: 1 | 2 | 3; photo: Blob | null; at: Date; note: string
+}) {
+  const s = await session()
+  await db.transaction('rw', [db.reactions, db.foodIntros], async () => {
+    await db.reactions.add({
+      ...baseFields(s), child_id: input.childId, food_id: input.foodId, type: input.type,
+      severity: input.severity, photo: input.photo, at: input.at.toISOString(), note: input.note,
+    })
+    if (input.foodId) {
+      const intro = (await getIntros(input.childId))
+        .filter((i) => i.food_id === input.foodId)
+        .sort((a, b) => b.started_at.localeCompare(a.started_at))[0]
+      if (intro && intro.status !== 'reaction') await db.foodIntros.update(intro.id, touch({ status: 'reaction' }))
+    }
+  })
+}
+
+export async function deleteReaction(id: string) {
+  await db.reactions.update(id, touch({ deleted_at: nowISO() }))
 }

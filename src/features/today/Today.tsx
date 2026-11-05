@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import type { Child } from '@/db/types'
-import { useFeedingsSince } from '@/db/hooks'
+import { useFeedingsSince, useIntros } from '@/db/hooks'
+import { FOOD_BY_ID } from '@/data/foods'
+import { activeObservation, observationProgress, OBSERVE_DAYS } from '@/lib/food'
+import { useFoodSheets } from '@/features/food/FoodSheets'
 import { formatAge, getAge } from '@/lib/age'
 import { formatAgo, startOfDay, useNow } from '@/lib/time'
 import { IconBottle, IconFood } from '@/ui/icons'
@@ -27,6 +29,10 @@ export function Today({ child }: { child: Child }) {
   const today = startOfDay(now)
   const feedings = useFeedingsSince(child.id, today - 86_400_000)
   const lastFeeding = [...feedings].sort((a, b) => b.start_at.localeCompare(a.start_at))[0]
+  const intros = useIntros(child.id) ?? []
+  const obs = activeObservation(intros)
+  const obsP = obs ? observationProgress(obs, now) : null
+  const sheets = useFoodSheets(child)
 
   return (
     <div className="space-y-4">
@@ -51,10 +57,12 @@ export function Today({ child }: { child: Child }) {
             {lastFeeding ? `${feedingTitle(lastFeeding)} · ${formatAgo(now - new Date(lastFeeding.start_at).getTime())}` : 'Ще не записували'}
           </span>
         </button>
-        <Link to="/food" className="flex min-h-24 flex-col items-start justify-between rounded-3xl bg-food-soft p-4 opacity-70">
+        <button onClick={() => sheets.openMeal()} className="flex min-h-24 flex-col items-start justify-between rounded-3xl bg-food-soft p-4 text-left active:scale-[0.98]">
           <span className="flex items-center gap-2 font-bold text-food"><IconFood /> Прикорм</span>
-          <span className="text-xs text-muted">Крок 3</span>
-        </Link>
+          <span className="text-xs text-muted">
+            {obs && obsP ? `${FOOD_BY_ID.get(obs.food_id)?.name_uk} · ${obsP.done ? 'як пройшло?' : `день ${obsP.day}/${OBSERVE_DAYS}`}` : 'Записати прийом їжі'}
+          </span>
+        </button>
       </div>
 
       <InstallHint />
@@ -65,6 +73,7 @@ export function Today({ child }: { child: Child }) {
       </section>
 
       <FeedingSheet open={feedOpen} onClose={() => setFeedOpen(false)} child={child} />
+      {sheets.element}
     </div>
   )
 }
