@@ -1,7 +1,6 @@
 import { baseFields, db, getSession, nowISO, setSetting, getSetting } from './index'
-import type { BaseRecord, BottleContent, BreastSide, Feeding, SkinCareKind, SkinCheck, Sleep, SleepKind } from './types'
+import type { BaseRecord, BottleContent, BreastSide, CustomFood, Feeding, SkinCareKind, SkinCheck, Sleep, SleepKind } from './types'
 import { defaultKind } from '@/lib/sleep'
-import { OBSERVE_DAYS, activeObservation } from '@/lib/food'
 import type { FoodIntroStatus, MealItem, ReactionType } from './types'
 
 async function session() {
@@ -120,31 +119,25 @@ export async function deleteFeeding(id: string) {
 
 // ---------- Прикорм ----------
 
-
-export async function getIntros(childId: string) {
+export async function getMarks(childId: string) {
   return db.foodIntros.where('child_id').equals(childId).filter((i) => !i.deleted_at).toArray()
 }
 
-/** Почати вводити продукт: 3 доби спостереження + перша проба в журналі їжі. */
-export async function startIntro(childId: string, foodId: string, amount: number | null = null) {
-  const at = new Date()
+/**
+ * Позначка батьків для продукту: «ок» (introduced), «була реакція» (reaction), «не підійшло» (postponed).
+ * Зберігається в foodIntros; observe_until лишився з v1 і не використовується.
+ */
+export async function setFoodMark(childId: string, foodId: string, status: Exclude<FoodIntroStatus, 'observing'>) {
   const s = await session()
-  return db.transaction('rw', [db.foodIntros, db.meals], async () => {
-    const active = activeObservation(await getIntros(childId))
-    if (active) throw new Error('Триває спостереження за іншим продуктом')
-    await db.foodIntros.add({
-      ...baseFields(s), child_id: childId, food_id: foodId, started_at: at.toISOString(),
-      observe_until: new Date(at.getTime() + OBSERVE_DAYS * 24 * 3600_000).toISOString(), status: 'observing',
-    })
-    await db.meals.add({
-      ...baseFields(s), child_id: childId, at: at.toISOString(),
-      items: [{ food_id: foodId, amount, unit: amount ? 'spoon' : null, liked: null }], note: 'Перша проба',
-    })
-  })
+  const now = nowISO()
+  await db.foodIntros.add({ ...baseFields(s), child_id: childId, food_id: foodId, started_at: now, observe_until: now, status })
 }
 
-export async function resolveIntro(id: string, status: Exclude<FoodIntroStatus, 'observing'>) {
-  await db.foodIntros.update(id, touch({ status }))
+export async function addCustomFood(name: string, category: CustomFood['category'] = 'other', allergen: string | null = null) {
+  const s = await session()
+  const f: CustomFood = { ...baseFields(s), name_uk: name.trim(), emoji: '🍽', category, allergen_code: allergen }
+  await db.customFoods.add(f)
+  return f
 }
 
 export async function addMeal(childId: string, items: MealItem[], at = new Date(), note = '') {
@@ -156,7 +149,7 @@ export async function deleteMeal(id: string) {
   await db.meals.update(id, touch({ deleted_at: nowISO() }))
 }
 
-/** Реакція. Якщо продукт зараз під спостереженням — його статус стає «реакція». */
+/** Реакція. Якщо вказано продукт — він отримує позначку «була реакція». */
 export async function addReaction(input: {
   childId: string; foodId: string | null; type: ReactionType; severity: 1 | 2 | 3; photo: Blob | null; at: Date; note: string
 }) {
@@ -167,10 +160,8 @@ export async function addReaction(input: {
       severity: input.severity, photo: input.photo, at: input.at.toISOString(), note: input.note,
     })
     if (input.foodId) {
-      const intro = (await getIntros(input.childId))
-        .filter((i) => i.food_id === input.foodId)
-        .sort((a, b) => b.started_at.localeCompare(a.started_at))[0]
-      if (intro && intro.status !== 'reaction') await db.foodIntros.update(intro.id, touch({ status: 'reaction' }))
+      const now = nowISO()
+      await db.foodIntros.add({ ...baseFields(s), child_id: input.childId, food_id: input.foodId, started_at: now, observe_until: now, status: 'reaction' })
     }
   })
 }

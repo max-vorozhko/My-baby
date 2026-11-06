@@ -1,56 +1,39 @@
 import type { Child } from '@/db/types'
-import { useIntros, useMealsSince } from '@/db/hooks'
-import { allergenStates, ALLERGEN_REMIND_DAYS } from '@/lib/food'
+import { allFoods } from '@/data/foods'
+import { useMarks, useMealsSince } from '@/db/hooks'
+import { allergenRows } from '@/lib/food'
 import { DAY_MS, useNow } from '@/lib/time'
 import { daysWord } from '@/lib/age'
-import { Card } from '@/ui/kit'
-import { Disclaimer } from '@/ui/Disclaimer'
-import { STATUS_DOT, STATUS_LABEL } from './status'
-import { useState } from 'react'
+import { STATUS_DOT } from './status'
 
-/** Трекер 9 основних алергенів (ТЗ 3.2). */
+/** 9 основних алергенів — факти: які давали і коли востаннє. */
 export function AllergensCard({ child, onFood }: { child: Child; onFood: (id: string) => void }) {
   const now = useNow(60_000)
-  const [since] = useState(() => Date.now() - 60 * DAY_MS)
-  const intros = useIntros(child.id) ?? []
-  const meals = useMealsSince(child.id, since)
-  const states = allergenStates(intros, meals, now)
-  const done = states.filter((s) => s.status === 'introduced').length
-  const reminders = states.filter((s) => s.remind)
+  const meals = useMealsSince(child.id, 0)
+  const marks = useMarks(child.id) ?? []
+  const rows = allergenRows(meals, marks)
+  const given = rows.filter((r) => r.status !== 'new')
+  const rest = rows.filter((r) => r.status === 'new')
+  const open = (code: string) => { const f = allFoods().find((x) => x.allergen_code === code); if (f) onFood(f.id) }
 
   return (
-    <Card>
-      <div className="flex items-baseline justify-between">
-        <h2 className="font-semibold">Алергени</h2>
-        <span className="text-sm text-muted">введено {done} з 9</span>
-      </div>
-      {reminders.length > 0 && (
-        <p className="mt-2 rounded-2xl bg-accent-soft p-3 text-sm">
-          Давно не давали: <b>{reminders.map((r) => r.name).join(', ')}</b>. Після введення алергени варто підтримувати в раціоні регулярно.
-        </p>
-      )}
-      <ul className="mt-2 divide-y divide-line">
-        {states.map((s) => {
-          const days = s.lastGiven ? Math.max(0, Math.floor((now - s.lastGiven) / DAY_MS)) : null
-          return (
-            <li key={s.code}>
-              <button onClick={() => onFood(s.foods[0].id)} className="flex min-h-12 w-full items-center gap-3 py-1 text-left">
-                <span className="text-xl">{s.emoji}</span>
-                <span className="flex-1">
-                  <span className="block font-medium">{s.name}</span>
-                  <span className="block text-xs text-muted">
-                    {STATUS_LABEL[s.status]}
-                    {days !== null && s.status !== 'new' && ` · ${days === 0 ? 'сьогодні' : `${days} ${daysWord(days)} тому`}`}
-                  </span>
-                </span>
-                <span className={`h-3 w-3 rounded-full ${s.remind ? 'bg-accent ring-4 ring-accent-soft' : STATUS_DOT[s.status]}`} />
+    <div className="space-y-2 rounded-2xl border border-line bg-surface p-4">
+      {given.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {given.map((r) => {
+            const d = r.last ? Math.max(0, Math.floor((now - r.last) / DAY_MS)) : 0
+            return (
+              <button key={r.code} onClick={() => open(r.code)} className="flex min-h-10 items-center gap-2 rounded-full bg-line/60 px-3 text-sm">
+                <i className={`h-2 w-2 rounded-full ${STATUS_DOT[r.status]}`} />{r.name}
+                <span className="text-muted">{d === 0 ? 'сьогодні' : `${d} ${daysWord(d)} тому`}</span>
               </button>
-            </li>
-          )
-        })}
-      </ul>
-      <p className="mt-2 text-xs text-muted">Нагадування — якщо введений алерген не давали понад {ALLERGEN_REMIND_DAYS} днів.</p>
-      <Disclaimer compact className="mt-2" />
-    </Card>
+            )
+          })}
+        </div>
+      ) : <p className="text-sm text-muted">Ще не давали жодного з 9.</p>}
+      {rest.length > 0 && given.length > 0 && (
+        <p className="text-xs text-muted">Ще не давали: {rest.map((r) => r.name.toLowerCase()).join(', ')}</p>
+      )}
+    </div>
   )
 }

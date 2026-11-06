@@ -19,10 +19,10 @@ export function useFeedingsSince(childId: string, since: number) {
   }, [childId, since]) ?? []
 }
 
-/** Останні два тижні снів — для прогнозу і підказки переходу. */
-export const useRecentSleeps = (childId: string, dayStart: number) => useSleepsSince(childId, dayStart - 13 * DAY_MS)
+/** Останні ~2 тижні снів — для патернів і прогнозу. */
+export const useRecentSleeps = (childId: string, dayStart: number) => useSleepsSince(childId, dayStart - 15 * DAY_MS)
 
-export function useIntros(childId: string) {
+export function useMarks(childId: string) {
   return useLiveQuery(
     () => db.foodIntros.where('child_id').equals(childId).filter((i) => !i.deleted_at).toArray(),
     [childId],
@@ -58,4 +58,8 @@ export function useSkinCareSince(childId: string, since: number) {
     const rows = await db.skinCare.where('[child_id+at]').between([childId, from], [childId, '￿']).toArray()
     return rows.filter((c) => !c.deleted_at)
   }, [childId, since]) ?? []
+}
+
+export function useCustomFoods() {
+  return useLiveQuery(() => db.customFoods.filter((f) => !f.deleted_at).toArray(), [])
 }

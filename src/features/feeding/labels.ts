@@ -10,10 +10,9 @@ export function feedingTitle(f: Feeding) {
   return `${what}${f.amount_ml ? ` · ${f.amount_ml} мл` : ''}`
 }
 
-/** Пропонуємо протилежну сторону до останньої. */
-export function suggestedSide(feedings: Feeding[]): BreastSide | null {
-  const last = feedings.filter((f) => f.kind === 'breast' && f.side && f.side !== 'both')
+/** Сторона останнього годування грудьми (факт, без «пропонуємо»). */
+export function lastSide(feedings: Feeding[]): BreastSide | null {
+  const last = feedings.filter((f) => f.kind === 'breast' && f.side)
     .sort((a, b) => b.start_at.localeCompare(a.start_at))[0]
-  if (!last?.side) return null
-  return last.side === 'left' ? 'right' : 'left'
+  return last?.side ?? null
 }

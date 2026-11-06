@@ -1,4 +1,7 @@
-import type { FoodIntro, ItchLevel, SkinCare, SkinCheck, SkinTrigger } from '@/db/types'
+import type { ItchLevel, SkinCare, SkinCheck, SkinTrigger } from '@/db/types'
+
+/** Перша проба продукту (з журналу їжі). */
+export interface FirstTry { food_id: string; started_at: string; deleted_at?: string | null }
 import { daySummary, type SleepLike } from './sleep'
 import { DAY_MS, startOfDay } from './time'
 
@@ -8,7 +11,7 @@ export function isoDate(t: number) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
 }
 
-const alive = <T extends { deleted_at: string | null }>(x: T[]) => x.filter((r) => !r.deleted_at)
+const alive = <T extends { deleted_at?: string | null }>(x: T[]) => x.filter((r) => !r.deleted_at)
 
 export interface SkinDay {
   dayStart: number
@@ -25,7 +28,7 @@ export interface SkinDay {
 
 /** Серія за N днів (старі → нові) для графіка «свербіж ↔ сон ↔ догляд». */
 export function skinSeries(input: {
-  checks: SkinCheck[]; care: SkinCare[]; sleeps: SleepLike[]; intros: FoodIntro[]; days: number; now?: number
+  checks: SkinCheck[]; care: SkinCare[]; sleeps: SleepLike[]; intros: FirstTry[]; days: number; now?: number
 }): SkinDay[] {
   const now = input.now ?? Date.now()
   const today = startOfDay(now)

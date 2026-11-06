@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type {
-  BaseRecord, Child, Family, Feeding, FoodIntro, Meal, Member, Reaction, Setting, SkinCare, SkinCheck, Sleep,
+  BaseRecord, Child, Family, Feeding, FoodIntro, Meal, Member, Reaction, Setting, SkinCare, SkinCheck, Sleep, CustomFood,
 } from './types'
 
 export class MyBabyDB extends Dexie {
@@ -15,6 +15,7 @@ export class MyBabyDB extends Dexie {
   settings!: EntityTable<Setting, 'key'>
   skinChecks!: EntityTable<SkinCheck, 'id'>
   skinCare!: EntityTable<SkinCare, 'id'>
+  customFoods!: EntityTable<CustomFood, 'id'>
 
   constructor() {
     super('my-baby')
@@ -34,6 +35,8 @@ export class MyBabyDB extends Dexie {
       skinChecks: 'id, child_id, [child_id+date]',
       skinCare: 'id, child_id, [child_id+at]',
     })
+    // v3: власні продукти
+    this.version(3).stores({ customFoods: 'id, family_id' })
   }
 }
 

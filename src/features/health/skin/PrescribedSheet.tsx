@@ -13,8 +13,8 @@ export function PrescribedSheet({ child, open, onClose }: { child: Child; open: 
   const add = async (product: string) => { await addSkinCare(child.id, 'prescribed', product.trim()); onClose() }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Засіб від лікаря">
-      <p className="mb-3 text-sm text-muted">Відмітьте, що нанесли засіб, який призначив лікар. Як і скільки — лише за його рекомендацією.</p>
+    <Sheet open={open} onClose={onClose} title="Засіб">
+      <p className="mb-3 text-sm text-muted">Відмітка, що засіб нанесли. Назву вписуєте ви.</p>
       {saved.length > 0 && (
         <div className="mb-4 space-y-2">
           {saved.map((p) => (

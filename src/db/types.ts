@@ -138,6 +138,14 @@ export interface SkinCare extends BaseRecord {
   note: string
 }
 
+/** Власний продукт сім'ї (доповнює вбудований довідник). */
+export interface CustomFood extends BaseRecord {
+  name_uk: string
+  emoji: string
+  category: 'veg' | 'fruit' | 'grain' | 'protein' | 'dairy' | 'other'
+  allergen_code: string | null
+}
+
 export interface Setting {
   key: string
   value: unknown

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Child, Feeding, Meal, Reaction, SkinCare, Sleep } from '@/db/types'
 import { useFeedingsSince, useMealsSince, useReactionsSince, useSkinCareSince, useSleepsSince } from '@/db/hooks'
-import { FOOD_BY_ID } from '@/data/foods'
+import { getFood } from '@/data/foods'
 import { deleteMeal, deleteReaction, deleteSkinCare } from '@/db/actions'
 import { REACTION_LABEL } from '@/features/food/ReactionSheet'
 import { Sheet } from '@/ui/Sheet'
@@ -17,7 +17,7 @@ type Item = { t: string; sleep?: Sleep; feeding?: Feeding; meal?: Meal; reaction
 
 const CARE_LABEL = { emollient: 'Крем-емолент', bath: 'Купання', prescribed: 'Засіб від лікаря' } as const
 
-const mealTitle = (m: Meal) => m.items.map((i) => FOOD_BY_ID.get(i.food_id)?.name_uk ?? '?').join(', ')
+const mealTitle = (m: Meal) => m.items.map((i) => getFood(i.food_id)?.name_uk ?? '?').join(', ')
 
 /** Стрічка подій доби; тап по запису — редагування. */
 export function DayFeed({ child, dayStart, show = 'all', empty }: {
@@ -35,7 +35,7 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
   const [view, setView] = useState<{ meal?: Meal; reaction?: Reaction } | null>(null)
 
   const items: Item[] = []
-  if (show !== 'feeding') {
+  if (show === 'all' || show === 'sleep') {
     for (const s of sleeps) {
       const end = s.end_at ? new Date(s.end_at).getTime() : now
       if (end > dayStart && new Date(s.start_at).getTime() < dayEnd) items.push({ t: s.start_at, sleep: s })
@@ -58,7 +58,7 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
 
   return (
     <>
-      <ul className="divide-y divide-line overflow-hidden rounded-3xl border border-line bg-surface">
+      <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
         {items.map(({ sleep, feeding, meal, reaction, care: c }) => {
           if (c) {
             return (
@@ -87,7 +87,7 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
             )
           }
           if (reaction) {
-            const fd = reaction.food_id ? FOOD_BY_ID.get(reaction.food_id) : null
+            const fd = reaction.food_id ? getFood(reaction.food_id) : null
             return (
               <li key={reaction.id}>
                 <button onClick={() => setView({ reaction })} className="flex min-h-16 w-full items-center gap-3 px-4 py-2 text-left">
@@ -167,7 +167,7 @@ function RecordView({ view, onClose }: { view: { meal?: Meal; reaction?: Reactio
         {m && (
           <ul className="space-y-1">
             {m.items.map((it) => {
-              const f = FOOD_BY_ID.get(it.food_id)
+              const f = getFood(it.food_id)
               return (
                 <li key={it.food_id} className="flex justify-between rounded-2xl border border-line bg-surface px-4 py-3">
                   <span>{f?.emoji} {f?.name_uk}</span>
@@ -180,7 +180,7 @@ function RecordView({ view, onClose }: { view: { meal?: Meal; reaction?: Reactio
         {r && (
           <div className="rounded-2xl border border-line bg-surface p-4">
             <p className="font-semibold">{REACTION_LABEL[r.type]} · {SEVERITY[r.severity]}</p>
-            {r.food_id && <p className="text-sm text-muted">Після: {FOOD_BY_ID.get(r.food_id)?.name_uk}</p>}
+            {r.food_id && <p className="text-sm text-muted">Після: {getFood(r.food_id)?.name_uk}</p>}
             {r.note && <p className="mt-2 text-sm">{r.note}</p>}
             {photoUrl && <img src={photoUrl} alt="Фото реакції" className="mt-3 max-h-64 rounded-xl" />}
           </div>

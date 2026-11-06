@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { IconFood, IconHeart, IconMore, IconSleep, IconToday } from '@/ui/icons'
+import { IconChart, IconFood, IconGear, IconHeart, IconPhone, IconSleep, IconToday } from '@/ui/icons'
 import { SyncBadge } from './SyncBadge'
 
 const tabs = [
@@ -7,30 +7,31 @@ const tabs = [
   { to: '/food', label: 'Їжа', Icon: IconFood },
   { to: '/sleep', label: 'Сон', Icon: IconSleep },
   { to: '/health', label: "Здоров'я", Icon: IconHeart },
-  { to: '/more', label: 'Ще', Icon: IconMore },
+  { to: '/stats', label: 'Статистика', Icon: IconChart },
 ]
 
 export function Layout() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col">
-      <div className="flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),12px)]">
-        <span className="text-sm font-semibold text-muted">My Baby</span>
+      <div className="flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),10px)]">
         <SyncBadge />
+        <Link to="/more" aria-label="Налаштування" className="flex h-11 w-11 items-center justify-center rounded-full text-muted">
+          <IconGear width={22} height={22} />
+        </Link>
       </div>
 
-      <main className="flex-1 px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+9rem)]">
+      <main className="flex-1 px-4 pt-1 pb-[calc(env(safe-area-inset-bottom)+8.5rem)]">
         <Outlet />
       </main>
 
-      {/* SOS поверх усіх вкладок — 1 тап з будь-якого екрана (ТЗ 3.9). */}
-      <Link
-        to="/sos"
-        aria-label="SOS: поперхування"
-        className="fixed right-4 z-20 flex h-14 items-center gap-2 rounded-full bg-sos px-5 font-bold text-white shadow-lg active:scale-95 dark:text-bg bottom-[calc(env(safe-area-inset-bottom)+5.25rem)]"
+      {/* Екстрений виклик — 1 тап з будь-якого екрана. Без медичних інструкцій. */}
+      <a
+        href="tel:103"
+        aria-label="Телефонувати 103"
+        className="fixed right-4 z-20 flex h-12 items-center gap-1.5 rounded-full bg-sos px-4 text-sm font-bold text-white shadow-md active:scale-95 dark:text-bg bottom-[calc(env(safe-area-inset-bottom)+5rem)]"
       >
-        SOS
-        <span className="text-sm font-medium opacity-90">поперхування</span>
-      </Link>
+        <IconPhone width={18} height={18} /> 103
+      </a>
 
       <nav className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-surface/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
         <ul className="mx-auto flex max-w-lg">
@@ -40,12 +41,10 @@ export function Layout() {
                 to={to}
                 end={end}
                 className={({ isActive }) =>
-                  `flex min-h-16 flex-col items-center justify-center gap-0.5 text-xs font-medium ${
-                    isActive ? 'text-accent' : 'text-muted'
-                  }`
+                  `flex min-h-16 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${isActive ? 'text-accent' : 'text-muted'}`
                 }
               >
-                <Icon />
+                <Icon width={22} height={22} />
                 {label}
               </NavLink>
             </li>

@@ -4,34 +4,35 @@
 
 @theme {
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --color-bg: #fdf8f3;
+  /* Спокійна палітра: нейтральні теплі тони + один акцент. Кольори модулів — лише для іконок. */
+  --color-bg: #faf7f3;
   --color-surface: #ffffff;
-  --color-ink: #3b2f26;
-  --color-muted: #7a6a5d;
-  --color-line: #eadfd4;
-  --color-accent: #e07a52;
-  --color-accent-soft: #fbe3d6;
-  --color-sleep: #6b6fc7;
-  --color-sleep-soft: #e4e5f8;
-  --color-food: #4f9d69;
-  --color-food-soft: #ddf0e2;
-  --color-sos: #d33a3a;
+  --color-ink: #2f2a26;
+  --color-muted: #857a70;
+  --color-line: #ece5dd;
+  --color-accent: #c26f4f;
+  --color-accent-soft: #f6ebe4;
+  --color-sleep: #6c70b0;
+  --color-sleep-soft: #eeeef7;
+  --color-food: #5f9170;
+  --color-food-soft: #e9f1eb;
+  --color-sos: #c94a4a;
 }
 
 /* Нічна тема: приглушена, без яскравого білого (ТЗ 7). */
 .dark {
-  --color-bg: #17141f;
-  --color-surface: #221e2c;
-  --color-ink: #d9d2c8;
-  --color-muted: #9a91a3;
-  --color-line: #332d3f;
-  --color-accent: #c9805f;
-  --color-accent-soft: #3a2a27;
-  --color-sleep: #9a9de0;
-  --color-sleep-soft: #2a2a44;
-  --color-food: #7cb98f;
-  --color-food-soft: #213129;
-  --color-sos: #c95656;
+  --color-bg: #16141b;
+  --color-surface: #1f1c25;
+  --color-ink: #d8d1c8;
+  --color-muted: #8f8797;
+  --color-line: #2e2a36;
+  --color-accent: #c98a6c;
+  --color-accent-soft: #2e2421;
+  --color-sleep: #9a9dd6;
+  --color-sleep-soft: #25253a;
+  --color-food: #86b595;
+  --color-food-soft: #1f2a23;
+  --color-sos: #c96161;
 }
 
 @layer base {

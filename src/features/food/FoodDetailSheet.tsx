@@ -1,68 +1,69 @@
 import type { Child } from '@/db/types'
-import { CATEGORY_LABEL, CHOKING_LABEL, FOOD_BY_ID, servingFor, ALLERGENS } from '@/data/foods'
-import { useIntros } from '@/db/hooks'
-import { startIntro } from '@/db/actions'
-import { getAge } from '@/lib/age'
-import { activeObservation, latestIntros, statusOf } from '@/lib/food'
+import { ALLERGENS, CATEGORY_LABEL, getFood } from '@/data/foods'
+import { useMarks, useMealsSince } from '@/db/hooks'
+import { setFoodMark } from '@/db/actions'
+import { foodStats, latestMarks, statusOf, type FoodStatus } from '@/lib/food'
+import { daysWord } from '@/lib/age'
+import { DAY_MS } from '@/lib/time'
 import { Sheet } from '@/ui/Sheet'
-import { Button } from '@/ui/kit'
-import { STATUS_CLS, STATUS_LABEL } from './status'
-import { Disclaimer } from '@/ui/Disclaimer'
+import { Button, Segmented, Stat } from '@/ui/kit'
+import { STATUS_DOT, STATUS_LABEL } from './status'
 
-export function FoodDetailSheet({
-  child, foodId, onClose, onReaction, onMeal,
-}: {
+const fmtDate = (ms: number) => new Date(ms).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
+
+/** Картка продукту: лише факти з записів + позначка батьків. */
+export function FoodDetailSheet({ child, foodId, onClose, onReaction, onMeal }: {
   child: Child; foodId: string | null; onClose: () => void
   onReaction: (foodId: string) => void; onMeal: (foodId: string) => void
 }) {
-  const intros = useIntros(child.id) ?? []
-  const food = foodId ? FOOD_BY_ID.get(foodId) : undefined
+  const meals = useMealsSince(child.id, 0)
+  const marks = useMarks(child.id) ?? []
+  const food = foodId ? getFood(foodId) : undefined
   if (!food) return null
-  const age = getAge(child.birth_date, child.preterm_weeks).months
-  const latest = latestIntros(intros)
-  const status = statusOf(food.id, latest)
-  const active = activeObservation(intros)
-  const tooYoung = age < food.min_age_months
-  const blocked = active && active.food_id !== food.id
+  const ever = foodStats(meals)
+  const st = ever.get(food.id)
+  const status = statusOf(food.id, latestMarks(marks), ever)
   const allergen = food.allergen_code ? ALLERGENS.find((a) => a.code === food.allergen_code) : null
-  const canStart = (status === 'new' || status === 'postponed') && !tooYoung && !blocked
+  const days = st ? Math.floor((Date.now() - st.first) / DAY_MS) : 0
 
-  const start = async () => { await startIntro(child.id, food.id); onClose() }
+  const mark = (s: FoodStatus) => {
+    if (s === 'tried') return setFoodMark(child.id, food.id, 'introduced')
+    if (s === 'reaction') return setFoodMark(child.id, food.id, 'reaction')
+    if (s === 'disliked') return setFoodMark(child.id, food.id, 'postponed')
+  }
 
   return (
     <Sheet open onClose={onClose} title={`${food.emoji} ${food.name_uk}`}>
-      <div className="space-y-3">
-        <div className="flex flex-wrap gap-2 text-sm">
-          <span className={`rounded-full border px-3 py-1 ${STATUS_CLS[status]}`}>{STATUS_LABEL[status]}</span>
-          <span className="rounded-full border border-line px-3 py-1 text-muted">{CATEGORY_LABEL[food.category]}</span>
-          <span className="rounded-full border border-line px-3 py-1 text-muted">з {food.min_age_months} міс</span>
-          {allergen && <span className="rounded-full border border-sos px-3 py-1">Алерген: {allergen.name}</span>}
-        </div>
+      <div className="space-y-4">
+        <p className="flex items-center gap-2 text-sm text-muted">
+          <i className={`h-2 w-2 rounded-full ${STATUS_DOT[status]}`} /> {STATUS_LABEL[status]}
+          <span>· {CATEGORY_LABEL[food.category]}</span>
+          {allergen && <span>· алерген: {allergen.name.toLowerCase()}</span>}
+        </p>
 
-        <div className="rounded-3xl border border-line bg-surface p-4">
-          <p className="text-sm text-muted">Як подавати у {age} міс</p>
-          <p className="mt-1">{servingFor(food, age)}</p>
-          <p className={`mt-3 text-sm ${food.choking_risk === 'high' ? 'font-semibold text-sos' : 'text-muted'}`}>
-            {CHOKING_LABEL[food.choking_risk]}
-          </p>
-          {food.note && <p className="mt-2 text-sm text-muted">{food.note}</p>}
-        </div>
-
-        {tooYoung && <p className="text-sm text-muted">Рекомендовано з {food.min_age_months} міс.</p>}
-        {blocked && (status === 'new' || status === 'postponed') && (
-          <p className="text-sm text-muted">Спершу завершіть спостереження за «{FOOD_BY_ID.get(active!.food_id)?.name_uk}». Нові продукти — по одному раз на 3 дні.</p>
+        {st ? (
+          <div className="grid grid-cols-3 gap-3 rounded-2xl border border-line bg-surface p-4">
+            <Stat value={st.count} label={st.count === 1 ? 'раз давали' : st.count % 10 >= 2 && st.count % 10 <= 4 && (st.count % 100 < 12 || st.count % 100 > 14) ? 'рази давали' : 'разів давали'} />
+            <Stat value={fmtDate(st.first)} label={`перша проба · ${days} ${daysWord(days)}`} />
+            <Stat value={st.liked || st.disliked ? `${st.liked}/${st.disliked}` : '—'} label="👍 / 👎" />
+          </div>
+        ) : (
+          <p className="text-sm text-muted">Ще не записували.</p>
         )}
 
-        <div className="space-y-2">
-          {canStart && <Button className="w-full" onClick={start}>Почати вводити · 3 дні спостереження</Button>}
-          {(status === 'introduced' || status === 'observing') && (
-            <Button className="w-full" variant={canStart ? 'secondary' : 'primary'} onClick={() => onMeal(food.id)}>Записати в прийом їжі</Button>
-          )}
-          {status !== 'new' && (
-            <Button className="w-full" variant="secondary" onClick={() => onReaction(food.id)}>Записати реакцію</Button>
-          )}
+        {status !== 'new' && (
+          <div>
+            <p className="mb-1.5 text-sm text-muted">Ваша позначка</p>
+            <Segmented<FoodStatus> value={status} onChange={mark} options={[
+              { value: 'tried', label: 'Ок' }, { value: 'disliked', label: 'Не підійшло' }, { value: 'reaction', label: 'Реакція' },
+            ]} />
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-2">
+          <Button onClick={() => onMeal(food.id)}>Записати</Button>
+          <Button variant="secondary" onClick={() => onReaction(food.id)}>Реакція</Button>
         </div>
-        <Disclaimer compact />
       </div>
     </Sheet>
   )
