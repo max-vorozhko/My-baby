@@ -11,11 +11,11 @@
   --color-bg: #fbf5ef;
   --color-surface: #ffffff;
   --color-ink: #3a2e27;
-  --color-muted: #9c8b7e;
+  --color-muted: #7a685b;
   --color-line: #efe5db;
-  --color-accent: #e07a52;
+  --color-accent: #b9552f;
   --color-accent-soft: #fde9de;
-  --color-sos: #ec6a6a;
+  --color-sos: #c84444;
 
   /* Модулі: пастельний фон віджета + глибокий колір тексту. */
   --color-sleep: #8e8be0;
@@ -32,9 +32,9 @@
   --color-skin-ink: #6a4b06;
 
   /* Градієнт картки сну. */
-  --color-dusk-1: #8e8be0;
-  --color-dusk-2: #b69ad8;
-  --color-dusk-3: #f2b39b;
+  --color-dusk-1: #6966c4;
+  --color-dusk-2: #8a6cbf;
+  --color-dusk-3: #b86a55;
 }
 
 /* Нічна тема: глибокі приглушені тони, без яскравого білого. */

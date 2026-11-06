@@ -73,7 +73,7 @@ export function SleepCard({ child }: { child: Child }) {
           <button
             onClick={toggle}
             aria-label={sleeping ? 'Прокинувся' : 'Заснув'}
-            className="absolute inset-[10px] flex flex-col items-center justify-center gap-0.5 rounded-full bg-white/25 text-xs font-bold backdrop-blur active:scale-95"
+            className="absolute inset-[10px] flex flex-col items-center justify-center gap-0.5 rounded-full bg-black/15 text-xs font-bold backdrop-blur active:scale-95"
           >
             <IconSleep width={22} height={22} />
             {sleeping ? 'Прокинувся' : 'Заснув'}

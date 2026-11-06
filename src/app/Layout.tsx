@@ -41,7 +41,7 @@ export function Layout() {
                 to={to}
                 end={end}
                 className={({ isActive }) =>
-                  `flex min-h-16 flex-col items-center justify-center gap-0.5 text-[11px] font-bold ${isActive ? 'text-accent' : 'text-muted/80'}`
+                  `flex min-h-16 flex-col items-center justify-center gap-0.5 text-[11px] font-bold ${isActive ? 'text-accent' : 'text-muted'}`
                 }
               >
                 <Icon width={22} height={22} />
