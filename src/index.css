@@ -35,6 +35,11 @@
   --color-dusk-1: #6966c4;
   --color-dusk-2: #8a6cbf;
   --color-dusk-3: #b86a55;
+
+  /* Нічний сон: глибоке нічне небо. */
+  --color-night-1: #24224f;
+  --color-night-2: #33306b;
+  --color-night-3: #4b3a6c;
 }
 
 /* Нічна тема: глибокі приглушені тони, без яскравого білого. */
@@ -64,6 +69,9 @@
   --color-dusk-1: #3a3670;
   --color-dusk-2: #4b3d6e;
   --color-dusk-3: #6a4a5a;
+  --color-night-1: #15142e;
+  --color-night-2: #1f1d42;
+  --color-night-3: #2e2546;
 }
 
 @layer base {
@@ -78,4 +86,17 @@
   }
   input, select, button, textarea { font: inherit; color: inherit; }
   input[type="date"] { min-height: 48px; }
+}
+
+/* ---- Тиха анімація картки сну ---- */
+@keyframes scene-twinkle { 0%, 100% { opacity: 0.15; transform: scale(0.8) } 50% { opacity: 0.9; transform: scale(1) } }
+@keyframes scene-spin { to { transform: rotate(360deg) } }
+@keyframes scene-glow { 0%, 100% { opacity: 0.55; transform: scale(0.95) } 50% { opacity: 1; transform: scale(1.05) } }
+@keyframes scene-float { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
+.scene-twinkle { animation: scene-twinkle 4.5s ease-in-out infinite; }
+.scene-spin { animation: scene-spin 90s linear infinite; }
+.scene-glow { animation: scene-glow 6s ease-in-out infinite; }
+.scene-float { animation: scene-float 7s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .scene-twinkle, .scene-spin, .scene-glow, .scene-float { animation: none; }
 }
