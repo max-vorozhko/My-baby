@@ -4,6 +4,7 @@ import { useRecentSleeps } from '@/db/hooks'
 import { MIN_SAMPLES, sleepForecast, sleepPatterns } from '@/lib/sleep'
 import { formatClock, formatDuration, formatTime, MIN, startOfDay, useNow } from '@/lib/time'
 import { IconSleep } from '@/ui/icons'
+import { SleepScene } from './SleepScene'
 
 /** Кільце прогресу навколо кнопки. */
 function Ring({ progress, children }: { progress: number | null; children: React.ReactNode }) {
@@ -62,8 +63,10 @@ export function SleepCard({ child }: { child: Child }) {
   }
 
   return (
-    <section className="rounded-[28px] bg-linear-to-br from-dusk-1 via-dusk-2 to-dusk-3 p-5 text-white shadow-lift">
-      <div className="flex items-center gap-4">
+    <section className={`relative overflow-hidden rounded-[28px] bg-linear-to-br p-5 text-white shadow-lift transition-colors duration-700 ${
+      f.state === 'sleeping' && f.kind === 'night' ? 'from-night-1 via-night-2 to-night-3' : 'from-dusk-1 via-dusk-2 to-dusk-3'}`}>
+      {f.state === 'sleeping' && <SleepScene kind={f.kind} />}
+      <div className="relative flex items-center gap-4">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold opacity-85">{label}</p>
           <p className="mt-0.5 text-[30px] font-extrabold leading-tight tabular-nums">{value}</p>
@@ -81,7 +84,7 @@ export function SleepCard({ child }: { child: Child }) {
         </Ring>
       </div>
       {sleeping && f.kind === 'night' && (
-        <button onClick={wakeUp} className="mt-3 min-h-10 rounded-full bg-white/20 px-4 text-sm font-semibold">+1 пробудження</button>
+        <button onClick={wakeUp} className="relative mt-3 min-h-10 rounded-full bg-white/20 px-4 text-sm font-semibold">+1 пробудження</button>
       )}
     </section>
   )
