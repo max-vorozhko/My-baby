@@ -17,7 +17,7 @@ export function AllergensCard({ child, onFood }: { child: Child; onFood: (id: st
   const open = (code: string) => { const f = allFoods().find((x) => x.allergen_code === code); if (f) onFood(f.id) }
 
   return (
-    <div className="space-y-2 rounded-2xl border border-line bg-surface p-4">
+    <div className="space-y-2 rounded-3xl bg-surface shadow-soft p-4">
       {given.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {given.map((r) => {

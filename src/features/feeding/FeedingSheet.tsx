@@ -32,7 +32,7 @@ export function FeedingSheet({ open, onClose, child }: { open: boolean; onClose:
           <button
             key={side}
             onClick={() => breast(side)}
-            className="min-h-16 rounded-2xl border border-line bg-surface text-lg font-semibold"
+            className="min-h-16 rounded-3xl bg-surface shadow-soft text-lg font-semibold"
           >
             {side === 'left' ? 'Ліва' : 'Права'}
             {last === side && <span className="block text-xs font-normal text-muted">минулого разу</span>}

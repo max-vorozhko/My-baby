@@ -41,7 +41,7 @@ export function MealSheet({ child, open, preselect, onClose }: {
             {items.map((it) => {
               const f = getFood(it.food_id)
               return (
-                <li key={it.food_id} className="flex items-center gap-2 rounded-2xl border border-line bg-surface p-2 pl-3">
+                <li key={it.food_id} className="flex items-center gap-2 rounded-3xl bg-surface shadow-soft p-2 pl-3">
                   <span className="flex-1 truncate font-medium">{f?.emoji} {f?.name_uk}</span>
                   <button aria-label="Менше" onClick={() => patch(it.food_id, { amount: Math.max(0, (it.amount ?? 0) - 1) })} className="h-11 w-11 rounded-xl text-xl text-muted">−</button>
                   <span className="w-12 text-center text-sm tabular-nums">{it.amount ?? 0} лож.</span>

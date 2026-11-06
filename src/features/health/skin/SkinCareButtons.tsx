@@ -15,7 +15,7 @@ export function SkinCareButtons({ child }: { child: Child }) {
   const baths = care.filter((c) => c.kind === 'bath').length
   const meds = care.filter((c) => c.kind === 'prescribed').length
 
-  const btn = 'flex min-h-16 flex-col items-center justify-center rounded-2xl border border-line bg-surface px-2 text-center active:scale-[0.98]'
+  const btn = 'flex min-h-16 flex-col items-center justify-center rounded-3xl bg-surface shadow-soft px-2 text-center active:scale-[0.98]'
   return (
     <>
       <div className="grid grid-cols-3 gap-2">

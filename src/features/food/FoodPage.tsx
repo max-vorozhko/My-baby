@@ -37,7 +37,7 @@ export function FoodPage({ child }: { child: Child }) {
 
       {fresh.length > 0 && (
         <Section title="Нові продукти">
-          <ul className="divide-y divide-line rounded-2xl border border-line bg-surface">
+          <ul className="divide-y divide-line rounded-3xl bg-surface shadow-soft">
             {fresh.map((s) => (
               <li key={s.foodId}>
                 <button onClick={() => sheets.openFood(s.foodId)} className="flex min-h-12 w-full items-center gap-3 px-4 text-left">
@@ -57,7 +57,7 @@ export function FoodPage({ child }: { child: Child }) {
 
       <Section title="Алергени"><AllergensCard child={child} onFood={sheets.openFood} /></Section>
 
-      <Link to="/food/all" className="flex min-h-12 items-center justify-between rounded-2xl border border-line bg-surface px-4">
+      <Link to="/food/all" className="flex min-h-12 items-center justify-between rounded-3xl bg-surface shadow-soft px-4">
         <span>Усі продукти</span><span className="text-muted">→</span>
       </Link>
 

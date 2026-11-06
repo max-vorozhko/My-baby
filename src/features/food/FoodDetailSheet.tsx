@@ -42,7 +42,7 @@ export function FoodDetailSheet({ child, foodId, onClose, onReaction, onMeal }: 
         </p>
 
         {st ? (
-          <div className="grid grid-cols-3 gap-3 rounded-2xl border border-line bg-surface p-4">
+          <div className="grid grid-cols-3 gap-3 rounded-3xl bg-surface shadow-soft p-4">
             <Stat value={st.count} label={st.count === 1 ? 'раз давали' : st.count % 10 >= 2 && st.count % 10 <= 4 && (st.count % 100 < 12 || st.count % 100 > 14) ? 'рази давали' : 'разів давали'} />
             <Stat value={fmtDate(st.first)} label={`перша проба · ${days} ${daysWord(days)}`} />
             <Stat value={st.liked || st.disliked ? `${st.liked}/${st.disliked}` : '—'} label="👍 / 👎" />

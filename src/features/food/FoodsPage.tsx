@@ -33,7 +33,7 @@ export function FoodsPage({ child }: { child: Child }) {
           </button>
         ))}
       </div>
-      <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
+      <ul className="divide-y divide-line overflow-hidden rounded-3xl bg-surface shadow-soft">
         {list.map((f) => {
           const s = statusOf(f.id, marks, ever)
           const n = ever.get(f.id)?.count ?? 0

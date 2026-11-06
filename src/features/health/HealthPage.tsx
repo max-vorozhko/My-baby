@@ -15,7 +15,7 @@ export function HealthPage({ child }: { child: Child }) {
     <div className="space-y-4">
       <PageTitle>Здоров'я</PageTitle>
       {child.skin_module ? (
-        <Link to="/health/skin" className="flex min-h-16 items-center justify-between rounded-2xl border border-line bg-surface px-4">
+        <Link to="/health/skin" className="flex min-h-16 items-center justify-between rounded-3xl bg-surface shadow-soft px-4">
           <span>
             <span className="block font-semibold">Шкіра</span>
             <span className="block text-sm text-muted">{today ? `Сьогодні: свербіж ${ITCH_LONG[today.itch]}` : 'Огляду сьогодні ще немає'}</span>

@@ -1,52 +1,88 @@
 import type { Child } from '@/db/types'
 import { addWakeUp, endSleep, getActiveSleep, startSleep } from '@/db/actions'
 import { useRecentSleeps } from '@/db/hooks'
-import { MIN_SAMPLES, sleepForecast } from '@/lib/sleep'
-import { formatClock, formatDuration, formatTime, startOfDay, useNow } from '@/lib/time'
+import { MIN_SAMPLES, sleepForecast, sleepPatterns } from '@/lib/sleep'
+import { formatClock, formatDuration, formatTime, MIN, startOfDay, useNow } from '@/lib/time'
 import { IconSleep } from '@/ui/icons'
 
-/** Стан сну + 1 тап «Заснув / Прокинувся». Прогноз — з власних записів дитини. */
+/** Кільце прогресу навколо кнопки. */
+function Ring({ progress, children }: { progress: number | null; children: React.ReactNode }) {
+  const r = 42
+  const c = 2 * Math.PI * r
+  return (
+    <div className="relative h-[92px] w-[92px] shrink-0">
+      <svg viewBox="0 0 92 92" className="absolute inset-0" aria-hidden>
+        <circle cx="46" cy="46" r={r} fill="none" stroke="rgb(255 255 255 / 0.28)" strokeWidth="6" />
+        {progress !== null && (
+          <circle cx="46" cy="46" r={r} fill="none" stroke="white" strokeWidth="6" strokeLinecap="round"
+            strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(1, progress))} transform="rotate(-90 46 46)"
+            style={{ transition: 'stroke-dashoffset .6s' }} />
+        )}
+      </svg>
+      {children}
+    </div>
+  )
+}
+
+/** Головна картка сну: стан, прогноз з власних записів і кнопка в кільці. */
 export function SleepCard({ child }: { child: Child }) {
   const now = useNow(1000)
   const sleeps = useRecentSleeps(child.id, startOfDay(now))
-  const f = sleepForecast(sleeps, now)
+  const patterns = sleepPatterns(sleeps, now)
+  const f = sleepForecast(sleeps, now, patterns)
   const sleeping = f.state === 'sleeping'
   const active = sleeping ? sleeps.find((s) => !s.end_at) : undefined
 
   const toggle = () => (sleeping ? endSleep(child.id) : startSleep(child.id))
   const wakeUp = async () => { const a = await getActiveSleep(child.id); if (a) await addWakeUp(a.id) }
 
-  let title = ''
-  let sub = ''
+  let label = 'Сон'
+  let value = '—'
+  let sub = 'Відмітьте, коли малюк засне'
+  let progress: number | null = null
+
   if (f.state === 'sleeping') {
-    title = `Спить ${formatClock(now - f.since)}`
-    sub = `${f.kind === 'night' ? 'Нічний' : 'Денний'} сон з ${formatTime(f.since)}${active && f.kind === 'night' && active.wake_ups ? ` · пробуджень: ${active.wake_ups}` : ''}`
-  } else if (f.state === 'no_data') {
-    title = 'Сон'
-    sub = 'Відмітьте, коли малюк засне'
-  } else {
-    title = `Не спить ${formatDuration(f.awakeMs)}`
-    if (f.state === 'learning') sub = `Прогноз з'явиться після ${MIN_SAMPLES} днів записів`
-    else sub = `${f.state === 'past' ? 'Зазвичай засинав до' : 'Зазвичай засинає'} ${f.state === 'past' ? formatTime(f.hi) : `близько ${formatTime(f.target)}`}`
+    label = f.kind === 'night' ? `Нічний сон з ${formatTime(f.since)}` : `Спить з ${formatTime(f.since)}`
+    value = formatClock(now - f.since)
+    const typical = f.kind === 'night' ? patterns.nightDuration : patterns.napDuration[0]
+    if (typical && typical.n >= MIN_SAMPLES) {
+      progress = (now - f.since) / (typical.median * MIN)
+      sub = `Зазвичай спить ${formatDuration(typical.median * MIN)}`
+    } else sub = ''
+    if (active && f.kind === 'night' && active.wake_ups) sub = `${sub ? sub + ' · ' : ''}пробуджень: ${active.wake_ups}`
+  } else if (f.state === 'learning') {
+    label = 'Не спить'
+    value = formatDuration(f.awakeMs)
+    sub = `Прогноз — після ${MIN_SAMPLES} днів записів`
+  } else if (f.state === 'awake' || f.state === 'past') {
+    label = 'Не спить'
+    value = formatDuration(f.awakeMs)
+    progress = f.awakeMs / (f.typical.median * MIN)
+    sub = f.state === 'past' ? `Зазвичай засинав до ${formatTime(f.hi)}` : `Зазвичай засинає ~${formatTime(f.target)}`
   }
 
   return (
-    <section className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-4">
-      <div className="min-w-0 flex-1">
-        <p className="text-xl font-semibold tabular-nums">{title}</p>
-        <p className="mt-0.5 text-sm text-muted">{sub}</p>
-        {sleeping && f.kind === 'night' && (
-          <button onClick={wakeUp} className="mt-2 min-h-10 rounded-full border border-line px-3 text-sm">+1 пробудження</button>
-        )}
+    <section className="rounded-[28px] bg-linear-to-br from-dusk-1 via-dusk-2 to-dusk-3 p-5 text-white shadow-lift">
+      <div className="flex items-center gap-4">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold opacity-85">{label}</p>
+          <p className="mt-0.5 text-[30px] font-extrabold leading-tight tabular-nums">{value}</p>
+          {sub && <p className="mt-1 text-sm opacity-95">{sub}</p>}
+        </div>
+        <Ring progress={progress}>
+          <button
+            onClick={toggle}
+            aria-label={sleeping ? 'Прокинувся' : 'Заснув'}
+            className="absolute inset-[10px] flex flex-col items-center justify-center gap-0.5 rounded-full bg-white/25 text-xs font-bold backdrop-blur active:scale-95"
+          >
+            <IconSleep width={22} height={22} />
+            {sleeping ? 'Прокинувся' : 'Заснув'}
+          </button>
+        </Ring>
       </div>
-      <button
-        onClick={toggle}
-        aria-label={sleeping ? 'Прокинувся' : 'Заснув'}
-        className="flex h-20 w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-full bg-sleep text-xs font-semibold text-white active:scale-95 dark:text-bg"
-      >
-        <IconSleep width={24} height={24} />
-        {sleeping ? 'Прокинувся' : 'Заснув'}
-      </button>
+      {sleeping && f.kind === 'night' && (
+        <button onClick={wakeUp} className="mt-3 min-h-10 rounded-full bg-white/20 px-4 text-sm font-semibold">+1 пробудження</button>
+      )}
     </section>
   )
 }

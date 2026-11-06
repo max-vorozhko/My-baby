@@ -58,13 +58,13 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
 
   return (
     <>
-      <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
+      <ul className="divide-y divide-dashed divide-line overflow-hidden rounded-3xl bg-surface px-1 shadow-soft">
         {items.map(({ sleep, feeding, meal, reaction, care: c }) => {
           if (c) {
             return (
               <li key={c.id}>
                 <button onClick={() => confirm(`Видалити запис «${CARE_LABEL[c.kind]}»?`) && deleteSkinCare(c.id)} className="flex min-h-14 w-full items-center gap-3 px-4 py-2 text-left">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sleep-soft text-sleep"><IconDrop width={20} height={20} /></span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-skin-soft text-skin"><IconDrop width={20} height={20} /></span>
                   <span className="flex-1">
                     <span className="block font-semibold">{CARE_LABEL[c.kind]}{c.product && ` · ${c.product}`}</span>
                     <span className="block text-sm text-muted">{formatTime(c.at)}</span>
@@ -77,7 +77,7 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
             return (
               <li key={meal.id}>
                 <button onClick={() => setView({ meal })} className="flex min-h-16 w-full items-center gap-3 px-4 py-2 text-left">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-food-soft text-food"><IconFood width={20} height={20} /></span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-food-soft text-food"><IconFood width={20} height={20} /></span>
                   <span className="flex-1">
                     <span className="block font-semibold">{mealTitle(meal)}</span>
                     <span className="block text-sm text-muted">{formatTime(meal.at)}{meal.note && ` · ${meal.note}`}</span>
@@ -91,7 +91,7 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
             return (
               <li key={reaction.id}>
                 <button onClick={() => setView({ reaction })} className="flex min-h-16 w-full items-center gap-3 px-4 py-2 text-left">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sos/15 font-bold text-sos">!</span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sos/15 font-bold text-sos">!</span>
                   <span className="flex-1">
                     <span className="block font-semibold">Реакція: {REACTION_LABEL[reaction.type].toLowerCase()}</span>
                     <span className="block text-sm text-muted">{formatTime(reaction.at)}{fd && ` · ${fd.name_uk}`}</span>
@@ -105,7 +105,7 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
             return (
               <li key={sleep.id}>
                 <button onClick={() => setEditSleep(sleep)} className="flex min-h-16 w-full items-center gap-3 px-4 py-2 text-left">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sleep-soft text-sleep"><IconSleep width={20} height={20} /></span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sleep-soft text-sleep"><IconSleep width={20} height={20} /></span>
                   <span className="flex-1">
                     <span className="block font-semibold">{sleep.kind === 'night' ? 'Нічний сон' : 'Денний сон'}{!sleep.end_at && ' · спить'}</span>
                     <span className="block text-sm text-muted">
@@ -123,7 +123,7 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
           return (
             <li key={f.id}>
               <button onClick={() => setEditFeeding(f)} className="flex min-h-16 w-full items-center gap-3 px-4 py-2 text-left">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent"><IconBottle width={20} height={20} /></span>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-feed-soft text-feed"><IconBottle width={20} height={20} /></span>
                 <span className="flex-1">
                   <span className="block font-semibold">{feedingTitle(f)}{f.kind === 'breast' && !f.end_at && ' · зараз'}</span>
                   <span className="block text-sm text-muted">{formatTime(f.start_at)}</span>
@@ -169,7 +169,7 @@ function RecordView({ view, onClose }: { view: { meal?: Meal; reaction?: Reactio
             {m.items.map((it) => {
               const f = getFood(it.food_id)
               return (
-                <li key={it.food_id} className="flex justify-between rounded-2xl border border-line bg-surface px-4 py-3">
+                <li key={it.food_id} className="flex justify-between rounded-3xl bg-surface shadow-soft px-4 py-3">
                   <span>{f?.emoji} {f?.name_uk}</span>
                   <span className="text-muted">{it.amount ? `${it.amount} лож.` : ''} {it.liked === true ? '👍' : it.liked === false ? '👎' : ''}</span>
                 </li>
@@ -178,7 +178,7 @@ function RecordView({ view, onClose }: { view: { meal?: Meal; reaction?: Reactio
           </ul>
         )}
         {r && (
-          <div className="rounded-2xl border border-line bg-surface p-4">
+          <div className="rounded-3xl bg-surface shadow-soft p-4">
             <p className="font-semibold">{REACTION_LABEL[r.type]} · {SEVERITY[r.severity]}</p>
             {r.food_id && <p className="text-sm text-muted">Після: {getFood(r.food_id)?.name_uk}</p>}
             {r.note && <p className="mt-2 text-sm">{r.note}</p>}

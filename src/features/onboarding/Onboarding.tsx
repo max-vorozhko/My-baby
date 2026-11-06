@@ -38,7 +38,7 @@ export function Onboarding() {
             <p className="mt-3 text-lg text-muted">
               Сон, годування, прикорм і шкіра малюка — записи в 1–2 тапи і статистика. Працює без інтернету.
             </p>
-            <div className="mt-8 space-y-3 rounded-2xl border border-line bg-surface p-4">
+            <div className="mt-8 space-y-3 rounded-3xl bg-surface shadow-soft p-4">
               <Disclaimer className="text-sm" />
               <label className="flex min-h-12 items-center gap-3">
                 <input

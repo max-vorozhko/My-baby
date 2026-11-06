@@ -86,7 +86,7 @@ export function SkinPage({ child }: { child: Child }) {
 
       {history.length > 0 && (
         <Section title="Огляди">
-          <ul className="divide-y divide-line rounded-2xl border border-line bg-surface">
+          <ul className="divide-y divide-line rounded-3xl bg-surface shadow-soft">
             {history.map((c: SkinCheck) => (
               <li key={c.id}>
                 <button onClick={() => setCheckDate(c.date)} className="flex w-full gap-3 p-3 text-left">

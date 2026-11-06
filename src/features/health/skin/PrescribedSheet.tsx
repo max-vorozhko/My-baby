@@ -18,7 +18,7 @@ export function PrescribedSheet({ child, open, onClose }: { child: Child; open: 
       {saved.length > 0 && (
         <div className="mb-4 space-y-2">
           {saved.map((p) => (
-            <button key={p} onClick={() => add(p)} className="flex min-h-12 w-full items-center rounded-2xl border border-line bg-surface px-4 text-left font-semibold">{p}</button>
+            <button key={p} onClick={() => add(p)} className="flex min-h-12 w-full items-center rounded-3xl bg-surface shadow-soft px-4 text-left font-semibold">{p}</button>
           ))}
         </div>
       )}
