@@ -5,7 +5,7 @@ import { useFeedingsSince } from '@/db/hooks'
 import { DAY_MS } from '@/lib/time'
 import { Sheet } from '@/ui/Sheet'
 import { Button, Segmented, inputCls } from '@/ui/kit'
-import { sideShort, suggestedSide } from './labels'
+import { lastSide } from './labels'
 
 const AMOUNTS = [60, 90, 120, 150, 180, 210]
 
@@ -13,7 +13,7 @@ const AMOUNTS = [60, 90, 120, 150, 180, 210]
 export function FeedingSheet({ open, onClose, child }: { open: boolean; onClose: () => void; child: Child }) {
   const [since] = useState(() => Date.now() - 2 * DAY_MS)
   const recent = useFeedingsSince(child.id, since)
-  const suggest = suggestedSide(recent)
+  const last = lastSide(recent)
   const [content, setContent] = useState<BottleContent>('formula')
   const [amount, setAmount] = useState(120)
 
@@ -26,22 +26,21 @@ export function FeedingSheet({ open, onClose, child }: { open: boolean; onClose:
 
   return (
     <Sheet open={open} onClose={onClose} title="Груди / пляшечка">
-      <p className="mb-2 font-semibold">Груди — запустити таймер</p>
+      <p className="mb-2 text-sm text-muted">Груди — запустити таймер</p>
       <div className="grid grid-cols-2 gap-2">
         {(['left', 'right'] as const).map((side) => (
           <button
             key={side}
             onClick={() => breast(side)}
-            className={`min-h-16 rounded-2xl border-2 text-lg font-bold ${suggest === side ? 'border-accent bg-accent-soft' : 'border-line bg-surface'}`}
+            className="min-h-16 rounded-3xl bg-surface shadow-soft text-lg font-semibold"
           >
             {side === 'left' ? 'Ліва' : 'Права'}
-            {suggest === side && <span className="block text-xs font-medium text-muted">пропонуємо</span>}
+            {last === side && <span className="block text-xs font-normal text-muted">минулого разу</span>}
           </button>
         ))}
       </div>
-      {suggest && <p className="mt-1 text-xs text-muted">Минулого разу — {sideShort[suggest === 'left' ? 'right' : 'left']}.</p>}
 
-      <p className="mt-6 mb-2 font-semibold">Пляшечка</p>
+      <p className="mt-6 mb-2 text-sm text-muted">Пляшечка</p>
       <Segmented<BottleContent> value={content} onChange={setContent} options={[
         { value: 'formula', label: 'Суміш' }, { value: 'breast_milk', label: 'Зціджене' },
       ]} />

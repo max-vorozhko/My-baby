@@ -3,35 +3,67 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --color-bg: #fdf8f3;
+  --font-sans: Nunito, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --shadow-soft: 0 6px 20px -12px rgb(120 80 50 / 0.35);
+  --shadow-lift: 0 14px 32px -14px rgb(120 100 190 / 0.55);
+
+  /* Напрям A: теплий кремовий фон, білі картки з м'якою тінню, один акцент. */
+  --color-bg: #fbf5ef;
   --color-surface: #ffffff;
-  --color-ink: #3b2f26;
-  --color-muted: #7a6a5d;
-  --color-line: #eadfd4;
-  --color-accent: #e07a52;
-  --color-accent-soft: #fbe3d6;
-  --color-sleep: #6b6fc7;
-  --color-sleep-soft: #e4e5f8;
-  --color-food: #4f9d69;
-  --color-food-soft: #ddf0e2;
-  --color-sos: #d33a3a;
+  --color-ink: #3a2e27;
+  --color-muted: #7a685b;
+  --color-line: #efe5db;
+  --color-accent: #b9552f;
+  --color-accent-soft: #fde9de;
+  --color-sos: #c84444;
+
+  /* Модулі: пастельний фон віджета + глибокий колір тексту. */
+  --color-sleep: #8e8be0;
+  --color-sleep-soft: #ecebfb;
+  --color-sleep-ink: #3b3a7a;
+  --color-food: #4f8a62;
+  --color-food-soft: #dff1e3;
+  --color-food-ink: #245236;
+  --color-feed: #d9764e;
+  --color-feed-soft: #ffe6d8;
+  --color-feed-ink: #7a3416;
+  --color-skin: #c4962b;
+  --color-skin-soft: #fbefd2;
+  --color-skin-ink: #6a4b06;
+
+  /* Градієнт картки сну. */
+  --color-dusk-1: #6966c4;
+  --color-dusk-2: #8a6cbf;
+  --color-dusk-3: #b86a55;
 }
 
-/* Нічна тема: приглушена, без яскравого білого (ТЗ 7). */
+/* Нічна тема: глибокі приглушені тони, без яскравого білого. */
 .dark {
-  --color-bg: #17141f;
-  --color-surface: #221e2c;
-  --color-ink: #d9d2c8;
-  --color-muted: #9a91a3;
-  --color-line: #332d3f;
-  --color-accent: #c9805f;
-  --color-accent-soft: #3a2a27;
-  --color-sleep: #9a9de0;
-  --color-sleep-soft: #2a2a44;
-  --color-food: #7cb98f;
-  --color-food-soft: #213129;
-  --color-sos: #c95656;
+  --shadow-soft: 0 6px 20px -12px rgb(0 0 0 / 0.6);
+  --shadow-lift: 0 14px 32px -16px rgb(0 0 0 / 0.7);
+  --color-bg: #16131c;
+  --color-surface: #211d29;
+  --color-ink: #e4dcd2;
+  --color-muted: #9389a0;
+  --color-line: #2f2a38;
+  --color-accent: #e09272;
+  --color-accent-soft: #3a2a26;
+  --color-sos: #d46a6a;
+  --color-sleep: #a5a3e6;
+  --color-sleep-soft: #2a2845;
+  --color-sleep-ink: #cfcdf6;
+  --color-food: #8cc19c;
+  --color-food-soft: #1f2d24;
+  --color-food-ink: #bfe3c9;
+  --color-feed: #e59a7a;
+  --color-feed-soft: #372823;
+  --color-feed-ink: #f6cdb9;
+  --color-skin: #d9b45e;
+  --color-skin-soft: #33291a;
+  --color-skin-ink: #f0dca8;
+  --color-dusk-1: #3a3670;
+  --color-dusk-2: #4b3d6e;
+  --color-dusk-3: #6a4a5a;
 }
 
 @layer base {

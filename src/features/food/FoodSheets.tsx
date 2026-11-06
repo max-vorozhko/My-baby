@@ -1,29 +1,22 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import type { Child } from '@/db/types'
 import { FoodDetailSheet } from './FoodDetailSheet'
 import { MealSheet } from './MealSheet'
 import { ReactionSheet } from './ReactionSheet'
 
-/** Спільний контролер шторок прикорму для «Сьогодні», «Їжа» і «Що вже пробували». */
+/** Спільний контролер шторок прикорму. */
 export function useFoodSheets(child: Child) {
-  const navigate = useNavigate()
   const [detail, setDetail] = useState<string | null>(null)
   const [reaction, setReaction] = useState<{ foodId: string | null } | null>(null)
   const [meal, setMeal] = useState<{ foodId: string | null } | null>(null)
 
   const element = (
     <>
-      <FoodDetailSheet
-        child={child} foodId={detail} onClose={() => setDetail(null)}
+      <FoodDetailSheet child={child} foodId={detail} onClose={() => setDetail(null)}
         onReaction={(id) => { setDetail(null); setReaction({ foodId: id }) }}
-        onMeal={(id) => { setDetail(null); setMeal({ foodId: id }) }}
-      />
+        onMeal={(id) => { setDetail(null); setMeal({ foodId: id }) }} />
       <ReactionSheet child={child} open={!!reaction} foodId={reaction?.foodId ?? null} onClose={() => setReaction(null)} />
-      <MealSheet
-        child={child} open={!!meal} preselect={meal?.foodId} onClose={() => setMeal(null)}
-        onBrowse={() => { setMeal(null); navigate('/food/tried') }}
-      />
+      <MealSheet child={child} open={!!meal} preselect={meal?.foodId} onClose={() => setMeal(null)} />
     </>
   )
   return {

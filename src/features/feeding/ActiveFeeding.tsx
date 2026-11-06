@@ -2,7 +2,7 @@ import type { Child } from '@/db/types'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db'
 import { startBreast, stopFeeding } from '@/db/actions'
-import { formatClock, formatTime, useNow } from '@/lib/time'
+import { formatClock, useNow } from '@/lib/time'
 import { sideLabel } from './labels'
 
 /** Активний таймер грудей: зміна сторони і завершення — по 1 тапу. */
@@ -16,17 +16,17 @@ export function ActiveFeeding({ child }: { child: Child }) {
   const other = active.side === 'left' ? 'right' : 'left'
 
   return (
-    <section className="rounded-3xl bg-accent-soft p-4">
-      <p className="text-sm text-muted">{sideLabel[active.side]} з {formatTime(active.start_at)}</p>
-      <p className="mt-0.5 text-3xl font-bold tabular-nums">{formatClock(now - new Date(active.start_at).getTime())}</p>
-      <div className="mt-3 flex gap-2">
-        <button onClick={() => startBreast(child.id, other)} className="min-h-12 flex-1 rounded-2xl border border-line bg-surface font-semibold">
-          На {other === 'left' ? 'ліву' : 'праву'}
-        </button>
-        <button onClick={() => stopFeeding(child.id)} className="min-h-12 flex-1 rounded-2xl bg-accent font-bold text-white dark:text-bg">
-          Завершити
-        </button>
+    <section className="flex items-center gap-3 rounded-2xl border border-accent/40 bg-surface p-3 pl-4">
+      <div className="flex-1">
+        <p className="text-lg font-semibold tabular-nums">{formatClock(now - new Date(active.start_at).getTime())}</p>
+        <p className="text-sm text-muted">{sideLabel[active.side]}</p>
       </div>
+      <button onClick={() => startBreast(child.id, other)} className="min-h-11 rounded-full border border-line px-4 text-sm">
+        На {other === 'left' ? 'ліву' : 'праву'}
+      </button>
+      <button onClick={() => stopFeeding(child.id)} className="min-h-11 rounded-full bg-accent px-4 text-sm font-semibold text-white dark:text-bg">
+        Стоп
+      </button>
     </section>
   )
 }

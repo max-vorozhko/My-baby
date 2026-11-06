@@ -38,6 +38,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,json,woff2}'],
+        // Вʼєтнамська частина шрифту не потрібна офлайн.
+        globIgnores: ['**/*vietnamese*'],
         navigateFallback: `${base}index.html`,
       },
     }),

@@ -1,74 +1,69 @@
 import { describe, expect, it } from 'vitest'
 import type { FoodIntro, Meal } from '@/db/types'
-import { activeObservation, allergenStates, observationProgress, suggestNext } from './food'
+import { allergenRows, foodStats, latestMarks, recentlyNew, statusOf, topFoods, varietySummary } from './food'
 import { DAY_MS } from './time'
 
 const base = { family_id: 'f', created_by: 'u', created_at: '', updated_at: '', deleted_at: null, child_id: 'c' }
-const NOW = new Date('2026-11-05T12:00:00Z').getTime()
+const NOW = new Date('2026-11-30T12:00:00Z').getTime()
 const iso = (ms: number) => new Date(ms).toISOString()
-const intro = (food_id: string, status: FoodIntro['status'], startedMs: number): FoodIntro => ({
-  ...base, id: food_id + startedMs, food_id, status, started_at: iso(startedMs), observe_until: iso(startedMs + 3 * DAY_MS),
+let n = 0
+const meal = (daysAgo: number, ...foods: [string, number?, boolean?][]): Meal => ({
+  ...base, id: 'm' + n++, at: iso(NOW - daysAgo * DAY_MS), note: '',
+  items: foods.map(([food_id, amount = 2, liked]) => ({ food_id, amount, unit: 'spoon' as const, liked: liked ?? null })),
+})
+const mark = (food_id: string, status: FoodIntro['status'], daysAgo: number): FoodIntro => ({
+  ...base, id: food_id + daysAgo, food_id, status, started_at: iso(NOW - daysAgo * DAY_MS), observe_until: iso(NOW),
 })
 
-describe('observation', () => {
-  it('blocks suggestions while a food is being observed', () => {
-    const intros = [intro('zucchini', 'observing', NOW - DAY_MS)]
-    expect(activeObservation(intros)?.food_id).toBe('zucchini')
-    expect(suggestNext(intros, 7)).toEqual([])
+describe('foodStats / topFoods', () => {
+  const meals = [
+    ...Array.from({ length: 10 }, (_, i) => meal(i, ['broccoli', 3, true])),
+    ...Array.from({ length: 7 }, (_, i) => meal(i + 1, ['carrot', 2, i % 2 === 0])),
+    meal(40, ['broccoli']),
+  ]
+  it('counts how many times each food was given in the period', () => {
+    const top = topFoods(meals, NOW - 30 * DAY_MS)
+    expect(top.map((s) => [s.foodId, s.count])).toEqual([['broccoli', 10], ['carrot', 7]])
+    expect(top[0]).toMatchObject({ spoons: 30, liked: 10 })
+    expect(top[1]).toMatchObject({ liked: 4, disliked: 3 })
   })
-
-  it('progress: day 2 of 3, not done', () => {
-    const p = observationProgress(intro('zucchini', 'observing', NOW - 1.5 * DAY_MS), NOW)
-    expect(p).toMatchObject({ day: 2, done: false })
+  it('all-time includes older meals', () => {
+    expect(foodStats(meals).get('broccoli')!.count).toBe(11)
   })
-
-  it('day is at least 1 even if the clock lags behind the start', () => {
-    expect(observationProgress(intro('zucchini', 'observing', NOW + 30_000), NOW).day).toBe(1)
-  })
-
-  it('done after 3 days but still blocks until resolved', () => {
-    const intros = [intro('zucchini', 'observing', NOW - 3.2 * DAY_MS)]
-    expect(observationProgress(intros[0], NOW).done).toBe(true)
-    expect(suggestNext(intros, 7)).toEqual([])
-  })
-
-  it('suggests next untried age-appropriate foods after resolving', () => {
-    const intros = [intro('zucchini', 'introduced', NOW - 4 * DAY_MS)]
-    const next = suggestNext(intros, 6).map((f) => f.id)
-    expect(next).not.toContain('zucchini')
-    expect(next[0]).toBe('broccoli')
-  })
-
-  it('never suggests honey before 12 months', () => {
-    const all = suggestNext([], 11, 100).map((f) => f.id)
-    expect(all).not.toContain('honey')
-    expect(suggestNext([], 12, 100).map((f) => f.id)).toContain('honey')
-  })
-
-  it('uses only the latest intro per food', () => {
-    const intros = [intro('egg', 'postponed', NOW - 10 * DAY_MS), intro('egg', 'observing', NOW - DAY_MS)]
-    expect(activeObservation(intros)?.food_id).toBe('egg')
+  it('ignores soft-deleted meals', () => {
+    expect(foodStats([{ ...meal(0, ['egg']), deleted_at: 'x' }]).size).toBe(0)
   })
 })
 
-describe('allergenStates', () => {
-  it('reminds when an introduced allergen was not given for over a week', () => {
-    const intros = [intro('egg', 'introduced', NOW - 20 * DAY_MS)]
-    const meals: Meal[] = [{ ...base, id: 'm', at: iso(NOW - 9 * DAY_MS), items: [{ food_id: 'egg', amount: 2, unit: 'spoon', liked: true }], note: '' }]
-    const egg = allergenStates(intros, meals, NOW).find((a) => a.code === 'egg')!
-    expect(egg.status).toBe('introduced')
-    expect(egg.remind).toBe(true)
-    expect(allergenStates(intros, [{ ...meals[0], at: iso(NOW - DAY_MS) }], NOW).find((a) => a.code === 'egg')!.remind).toBe(false)
+describe('status', () => {
+  it('parent mark wins, otherwise tried when given', () => {
+    const ever = foodStats([meal(1, ['egg']), meal(1, ['pear'])])
+    const marks = latestMarks([mark('egg', 'introduced', 5), mark('egg', 'reaction', 1)])
+    expect(statusOf('egg', marks, ever)).toBe('reaction')
+    expect(statusOf('pear', marks, ever)).toBe('tried')
+    expect(statusOf('apple', marks, ever)).toBe('new')
   })
+})
 
-  it('reaction outranks other statuses for the allergen', () => {
-    const intros = [intro('yogurt', 'introduced', NOW - 9 * DAY_MS), intro('cottage_cheese', 'reaction', NOW - 2 * DAY_MS)]
-    expect(allergenStates(intros, [], NOW).find((a) => a.code === 'milk')!.status).toBe('reaction')
+describe('recentlyNew', () => {
+  it('lists foods first tried in the last 7 days with days since first try', () => {
+    const r = recentlyNew([meal(2, ['egg']), meal(0, ['egg']), meal(20, ['pear'])], NOW)
+    expect(r.map((x) => [x.foodId, x.daysSince, x.count])).toEqual([['egg', 2, 2]])
   })
+})
 
-  it('covers all 9 allergens with at least one food', () => {
-    const s = allergenStates([], [], NOW)
-    expect(s).toHaveLength(9)
-    expect(s.every((a) => a.foods.length > 0)).toBe(true)
+describe('allergenRows / variety', () => {
+  it('counts allergen servings in the period and status', () => {
+    const meals = [meal(1, ['egg']), meal(3, ['egg'], ['yogurt']), meal(50, ['fish'])]
+    const rows = allergenRows(meals, [], NOW - 30 * DAY_MS)
+    expect(rows).toHaveLength(9)
+    expect(rows.find((r) => r.code === 'egg')).toMatchObject({ status: 'tried', count: 2 })
+    expect(rows.find((r) => r.code === 'milk')!.count).toBe(1)
+    expect(rows.find((r) => r.code === 'fish')).toMatchObject({ status: 'tried', count: 0 })
+    expect(rows.find((r) => r.code === 'soy')!.status).toBe('new')
+  })
+  it('variety: distinct foods and how many are new in the period', () => {
+    const meals = [meal(40, ['pear']), meal(5, ['pear'], ['egg']), meal(2, ['beef'])]
+    expect(varietySummary(meals, NOW - 30 * DAY_MS)).toEqual({ distinct: 3, fresh: 2, meals: 2 })
   })
 })

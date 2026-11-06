@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { FoodIntro, ItchLevel, SkinCare, SkinCheck } from '@/db/types'
+import type { ItchLevel, SkinCare, SkinCheck } from '@/db/types'
 import { isoDate, itchSleepLink, skinSeries, triggerCounts } from './skin'
 import { DAY_MS, startOfDay } from './time'
 
@@ -25,7 +25,7 @@ describe('skinSeries', () => {
   })
 
   it('links a flare to a food started within 48h before', () => {
-    const intro: FoodIntro = {
+    const intro = {
       ...base, id: 'i', food_id: 'egg', status: 'observing',
       started_at: new Date(day(2) + 12 * 3600_000).toISOString(), observe_until: '',
     }

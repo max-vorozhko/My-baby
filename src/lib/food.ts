@@ -1,19 +1,56 @@
-import { ALLERGENS, FOODS, FOOD_BY_ID, type AllergenCode, type Food } from '@/data/foods'
-import type { FoodIntro, FoodIntroStatus, Meal } from '@/db/types'
+import { ALLERGENS, allFoods, getFood, type AllergenCode } from '@/data/foods'
+import type { FoodIntro, Meal } from '@/db/types'
 import { DAY_MS } from './time'
 
-export const OBSERVE_DAYS = 3
-/** Як довго «введений» алерген може не з'являтися в раціоні до нагадування. ЧЕРНЕТКА. */
-export const ALLERGEN_REMIND_DAYS = 7
-
-export type FoodStatus = 'new' | FoodIntroStatus
+/**
+ * Прикорм як щоденник: лише факти з записів батьків.
+ * Статус продукту: позначка батьків (останні), інакше «пробували», якщо давали.
+ * Таблиця foodIntros зберігає позначки: introduced/observing → «ок», reaction, postponed → «не підійшло».
+ */
+export type FoodStatus = 'new' | 'tried' | 'reaction' | 'disliked'
 
 const t = (iso: string) => new Date(iso).getTime()
 
-/** Останнє введення кожного продукту. */
-export function latestIntros(intros: FoodIntro[]) {
+export interface FoodStat {
+  foodId: string
+  count: number
+  spoons: number
+  liked: number
+  disliked: number
+  first: number
+  last: number
+}
+
+/** Скільки разів і коли давали кожен продукт за період [from, to). */
+export function foodStats(meals: Meal[], from = 0, to = Infinity): Map<string, FoodStat> {
+  const m = new Map<string, FoodStat>()
+  for (const meal of meals) {
+    if (meal.deleted_at) continue
+    const at = t(meal.at)
+    if (at < from || at >= to) continue
+    for (const it of meal.items) {
+      const s = m.get(it.food_id) ?? { foodId: it.food_id, count: 0, spoons: 0, liked: 0, disliked: 0, first: at, last: at }
+      s.count++
+      s.spoons += it.unit === 'spoon' && it.amount ? it.amount : 0
+      if (it.liked === true) s.liked++
+      if (it.liked === false) s.disliked++
+      s.first = Math.min(s.first, at)
+      s.last = Math.max(s.last, at)
+      m.set(it.food_id, s)
+    }
+  }
+  return m
+}
+
+/** Найчастіші продукти за період: «броколі — 10, морква — 7». */
+export function topFoods(meals: Meal[], from = 0, to = Infinity) {
+  return [...foodStats(meals, from, to).values()].sort((a, b) => b.count - a.count || b.last - a.last)
+}
+
+/** Остання позначка батьків для кожного продукту. */
+export function latestMarks(marks: FoodIntro[]) {
   const m = new Map<string, FoodIntro>()
-  for (const i of intros) {
+  for (const i of marks) {
     if (i.deleted_at) continue
     const prev = m.get(i.food_id)
     if (!prev || prev.started_at < i.started_at) m.set(i.food_id, i)
@@ -21,74 +58,59 @@ export function latestIntros(intros: FoodIntro[]) {
   return m
 }
 
-export function statusOf(foodId: string, latest: Map<string, FoodIntro>): FoodStatus {
-  return latest.get(foodId)?.status ?? 'new'
+export function statusOf(foodId: string, marks: Map<string, FoodIntro>, everGiven: Map<string, FoodStat>): FoodStatus {
+  const mark = marks.get(foodId)?.status
+  if (mark === 'reaction') return 'reaction'
+  if (mark === 'postponed') return 'disliked'
+  if (mark === 'introduced' || mark === 'observing' || everGiven.has(foodId)) return 'tried'
+  return 'new'
 }
 
-/**
- * Активне спостереження. Триває, доки батьки не позначать результат:
- * після 3 діб застосунок питає «як пройшло?», але новий продукт не пропонує.
- */
-export function activeObservation(intros: FoodIntro[]) {
-  return [...latestIntros(intros).values()].find((i) => i.status === 'observing') ?? null
+/** Продукти, які вперше спробували за останні `days` днів, із кількістю днів від першої проби. */
+export function recentlyNew(meals: Meal[], now = Date.now(), days = 7) {
+  return [...foodStats(meals).values()]
+    .filter((s) => now - s.first < days * DAY_MS)
+    .sort((a, b) => b.first - a.first)
+    .map((s) => ({ ...s, daysSince: Math.max(0, Math.floor((now - s.first) / DAY_MS)) }))
 }
 
-export function observationProgress(intro: FoodIntro, now = Date.now()) {
-  const elapsed = now - t(intro.started_at)
-  const day = Math.max(1, Math.min(OBSERVE_DAYS, Math.floor(elapsed / DAY_MS) + 1))
-  return { day, done: now >= t(intro.observe_until), leftMs: Math.max(0, t(intro.observe_until) - now) }
-}
-
-/** «Наступний новий продукт»: порожньо, поки триває спостереження (ТЗ 3.2). */
-export function suggestNext(intros: FoodIntro[], ageMonths: number, limit = 3): Food[] {
-  if (activeObservation(intros)) return []
-  const latest = latestIntros(intros)
-  const fresh = FOODS.filter((f) => f.min_age_months <= ageMonths && !latest.has(f.id))
-  const postponed = FOODS.filter((f) => f.min_age_months <= ageMonths && latest.get(f.id)?.status === 'postponed')
-  return [...fresh, ...postponed].slice(0, limit)
-}
-
-export interface AllergenState {
+export interface AllergenRow {
   code: AllergenCode
   name: string
   emoji: string
-  foods: Food[]
   status: FoodStatus
-  lastGiven: number | null
-  remind: boolean
+  count: number
+  last: number | null
 }
 
-/** Трекер 9 алергенів: статус, коли давали востаннє, чи нагадати. */
-export function allergenStates(intros: FoodIntro[], meals: Meal[], now = Date.now()): AllergenState[] {
-  const latest = latestIntros(intros)
-  const rank: Record<FoodStatus, number> = { reaction: 4, introduced: 3, observing: 2, postponed: 1, new: 0 }
-
+/** 9 алергенів: чи пробували, скільки разів за період, коли востаннє. Без нагадувань. */
+export function allergenRows(meals: Meal[], marks: FoodIntro[], from = 0, to = Infinity): AllergenRow[] {
+  const latest = latestMarks(marks)
+  const ever = foodStats(meals)
+  const period = foodStats(meals, from, to)
+  const rank: Record<FoodStatus, number> = { reaction: 3, disliked: 2, tried: 1, new: 0 }
   return ALLERGENS.map((a) => {
-    const foods = FOODS.filter((f) => f.allergen_code === a.code)
+    const foods = allFoods().filter((f) => f.allergen_code === a.code)
     let status: FoodStatus = 'new'
-    let lastGiven: number | null = null
-    for (const food of foods) {
-      const intro = latest.get(food.id)
-      if (!intro) continue
-      if (rank[intro.status] > rank[status]) status = intro.status
-      lastGiven = Math.max(lastGiven ?? 0, t(intro.started_at))
+    let count = 0
+    let last: number | null = null
+    for (const f of foods) {
+      const s = statusOf(f.id, latest, ever)
+      if (rank[s] > rank[status]) status = s
+      count += period.get(f.id)?.count ?? 0
+      const l = ever.get(f.id)?.last
+      if (l) last = Math.max(last ?? 0, l)
     }
-    for (const meal of meals) {
-      if (meal.deleted_at) continue
-      if (meal.items.some((it) => FOOD_BY_ID.get(it.food_id)?.allergen_code === a.code)) {
-        lastGiven = Math.max(lastGiven ?? 0, t(meal.at))
-      }
-    }
-    const remind = status === 'introduced' && lastGiven !== null && now - lastGiven > ALLERGEN_REMIND_DAYS * DAY_MS
-    return { ...a, foods, status, lastGiven, remind }
+    return { ...a, status, count, last }
   })
 }
 
-/** Продукти, які можна вільно давати в прийомі їжі: введені + той, що зараз спостерігаємо. */
-export function mealCandidates(intros: FoodIntro[]): Food[] {
-  const latest = latestIntros(intros)
-  return FOODS.filter((f) => {
-    const s = latest.get(f.id)?.status
-    return s === 'introduced' || s === 'observing'
-  })
+/** Скільки різних продуктів давали за період і скільки з них нові. */
+export function varietySummary(meals: Meal[], from: number, to = Infinity) {
+  const ever = foodStats(meals)
+  const period = foodStats(meals, from, to)
+  const fresh = [...period.keys()].filter((id) => (ever.get(id)?.first ?? 0) >= from).length
+  return { distinct: period.size, fresh, meals: meals.filter((m) => !m.deleted_at && t(m.at) >= from && t(m.at) < to).length }
 }
+
+export const isAllergen = (foodId: string) => !!getFood(foodId)?.allergen_code

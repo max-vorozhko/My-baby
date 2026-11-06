@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Child } from '@/db/types'
-import { FOODS } from '@/data/foods'
-import { useFeedingsSince, useIntros } from '@/db/hooks'
-import { latestIntros } from '@/lib/food'
+import { getFood } from '@/data/foods'
+import { useFeedingsSince, useMealsSince } from '@/db/hooks'
+import { recentlyNew } from '@/lib/food'
+import { daysWord } from '@/lib/age'
 import { startOfDay, useNow } from '@/lib/time'
-import { Button, Card, PageTitle } from '@/ui/kit'
+import { Button, PageTitle, Section } from '@/ui/kit'
 import { ActiveFeeding } from '@/features/feeding/ActiveFeeding'
 import { FeedingSheet } from '@/features/feeding/FeedingSheet'
 import { DayFeed } from '@/features/today/DayFeed'
-import { ObservationCard } from './ObservationCard'
 import { AllergensCard } from './AllergensCard'
 import { useFoodSheets } from './FoodSheets'
 
@@ -18,47 +18,48 @@ export function FoodPage({ child }: { child: Child }) {
   const today = startOfDay(now)
   const [milkOpen, setMilkOpen] = useState(false)
   const feedings = useFeedingsSince(child.id, today)
-  const intros = useIntros(child.id) ?? []
+  const meals = useMealsSince(child.id, 0)
   const sheets = useFoodSheets(child)
-  const breastCount = feedings.filter((f) => f.kind === 'breast').length
-  const bottleMl = feedings.reduce((a, f) => a + (f.kind === 'bottle' ? f.amount_ml ?? 0 : 0), 0)
-  const triedCount = [...latestIntros(intros).values()].filter((i) => i.status !== 'postponed').length
+  const breast = feedings.filter((f) => f.kind === 'breast').length
+  const ml = feedings.reduce((a, f) => a + (f.kind === 'bottle' ? f.amount_ml ?? 0 : 0), 0)
+  const fresh = recentlyNew(meals, now)
 
   return (
-    <div className="space-y-4">
-      <PageTitle sub="Прикорм, алергени і молоко">Їжа</PageTitle>
+    <div className="space-y-5">
+      <PageTitle>Їжа</PageTitle>
       <ActiveFeeding child={child} />
 
-      <ObservationCard child={child} onReaction={(id) => sheets.openReaction(id)} onFood={sheets.openFood} />
-
       <div className="grid grid-cols-2 gap-2">
-        <Button onClick={() => sheets.openMeal()} className="min-h-14 bg-food">Записати прикорм</Button>
-        <Button variant="secondary" onClick={() => sheets.openReaction()} className="min-h-14">Реакція</Button>
+        <Button onClick={() => sheets.openMeal()}>Прикорм</Button>
+        <Button variant="secondary" onClick={() => setMilkOpen(true)}>Груди / пляшечка</Button>
       </div>
+      {(breast > 0 || ml > 0) && <p className="-mt-3 px-1 text-sm text-muted">Сьогодні: {breast} прикладань{ml > 0 ? ` · ${ml} мл` : ''}</p>}
 
-      <Link to="/food/tried" className="flex min-h-16 items-center justify-between rounded-3xl border border-line bg-surface px-4">
-        <span>
-          <span className="block font-semibold">Що вже пробували</span>
-          <span className="block text-sm text-muted">{triedCount} з {FOODS.length} продуктів</span>
-        </span>
-        <span className="text-accent">→</span>
+      {fresh.length > 0 && (
+        <Section title="Нові продукти">
+          <ul className="divide-y divide-line rounded-3xl bg-surface shadow-soft">
+            {fresh.map((s) => (
+              <li key={s.foodId}>
+                <button onClick={() => sheets.openFood(s.foodId)} className="flex min-h-12 w-full items-center gap-3 px-4 text-left">
+                  <span>{getFood(s.foodId)?.emoji}</span>
+                  <span className="flex-1">{getFood(s.foodId)?.name_uk}</span>
+                  <span className="text-sm text-muted">{s.daysSince === 0 ? 'вперше сьогодні' : `вперше ${s.daysSince} ${daysWord(s.daysSince)} тому`} · {s.count}×</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      <Section title="Сьогодні" action={<button onClick={() => sheets.openReaction()} className="text-sm text-accent">+ Реакція</button>}>
+        <DayFeed child={child} dayStart={today} show="food" empty="Прикорму сьогодні ще не було" />
+      </Section>
+
+      <Section title="Алергени"><AllergensCard child={child} onFood={sheets.openFood} /></Section>
+
+      <Link to="/food/all" className="flex min-h-12 items-center justify-between rounded-3xl bg-surface shadow-soft px-4">
+        <span>Усі продукти</span><span className="text-muted">→</span>
       </Link>
-
-      <section>
-        <h2 className="mb-2 font-semibold">Сьогодні</h2>
-        <DayFeed child={child} dayStart={today} show="food" empty="Сьогодні їжі не записано." />
-      </section>
-
-      <Card>
-        <h2 className="font-semibold">Груди / пляшечка сьогодні</h2>
-        <div className="mt-2 grid grid-cols-2 gap-2 text-center">
-          <div><p className="text-xl font-bold">{breastCount}</p><p className="text-xs text-muted">прикладань</p></div>
-          <div><p className="text-xl font-bold">{bottleMl} мл</p><p className="text-xs text-muted">з пляшечки</p></div>
-        </div>
-        <Button variant="secondary" className="mt-3 w-full" onClick={() => setMilkOpen(true)}>Записати годування</Button>
-      </Card>
-
-      <AllergensCard child={child} onFood={sheets.openFood} />
 
       <FeedingSheet open={milkOpen} onClose={() => setMilkOpen(false)} child={child} />
       {sheets.element}
