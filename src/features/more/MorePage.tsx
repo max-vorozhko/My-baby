@@ -7,6 +7,7 @@ import { isStandalone, requestPersistence, useInstallPrompt } from '@/lib/storag
 import { ChildForm, isDraftValid, type ChildDraft } from '@/features/profile/ChildForm'
 import { Button, Card, PageTitle, Segmented } from '@/ui/kit'
 import { Disclaimer } from '@/ui/Disclaimer'
+import { analyticsAvailable, analyticsEnabled, setAnalyticsEnabled } from '@/lib/analytics'
 
 function toDraft(c: Child): ChildDraft {
   return {
@@ -19,6 +20,7 @@ export function MorePage({ child, theme }: { child: Child; theme: { pref: ThemeP
   const [draft, setDraft] = useState(() => toDraft(child))
   const [saved, setSaved] = useState(false)
   const [persisted, setPersisted] = useState<boolean | null>(null)
+  const [stats, setStats] = useState(analyticsEnabled)
   const { canPrompt, prompt } = useInstallPrompt()
 
   useEffect(() => { requestPersistence().then(setPersisted) }, [])
@@ -86,6 +88,19 @@ export function MorePage({ child, theme }: { child: Child; theme: { pref: ThemeP
         <h2 className="mb-1 text-lg font-semibold">Сім'я</h2>
         <p className="text-sm text-muted">Запрошення партнера, няні чи бабусі з'явиться після підключення синхронізації.</p>
       </Card>
+
+      {analyticsAvailable() && (
+        <Card>
+          <label className="flex min-h-12 items-center justify-between gap-3">
+            <span>
+              <span className="block font-medium">Анонімна статистика відвідувань</span>
+              <span className="block text-sm text-muted">Лише які екрани відкривають — без імен, записів і cookies. Допомагає покращувати застосунок.</span>
+            </span>
+            <input type="checkbox" role="switch" className="h-6 w-6 shrink-0 accent-[var(--color-accent)]"
+              checked={stats} onChange={(e) => { setAnalyticsEnabled(e.target.checked); setStats(e.target.checked) }} />
+          </label>
+        </Card>
+      )}
 
       <Card className="space-y-3">
         <h2 className="text-lg font-semibold">Дані</h2>
