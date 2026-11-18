@@ -18,6 +18,10 @@ npm run preview  # перевірка збірки, у т.ч. офлайн
 Workflow `.github/workflows/deploy.yml` збирає застосунок під `/<repo>/` і публікує при пуші в `main`.
 Один раз потрібно ввімкнути: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 
+## Анонімна статистика (GoatCounter)
+
+Лічильник переглядів екранів без cookies і персональних даних (`src/lib/analytics.ts`): надсилається лише назва екрана (`/sleep`, `/stats`…) і розмір дисплея. Код сайту — `mybaby` (статистика: https://mybaby.goatcounter.com); можна змінити змінною репозиторію **`GOATCOUNTER_CODE`** (Settings → Secrets and variables → Actions → Variables). Користувач може вимкнути в налаштуваннях застосунку.
+
 ## Стек
 
 React + Vite + TypeScript, Tailwind CSS v4, vite-plugin-pwa (Workbox), Dexie.js.

@@ -6,6 +6,7 @@ import { useActiveChild } from '@/lib/useActiveChild'
 import { useCustomFoods } from '@/db/hooks'
 import { setCustomFoods } from '@/data/foods'
 import { Layout } from './Layout'
+import { ScreenTracker } from './ScreenTracker'
 import { Onboarding } from '@/features/onboarding/Onboarding'
 import { Today } from '@/features/today/Today'
 import { FoodPage } from '@/features/food/FoodPage'
@@ -28,6 +29,8 @@ export default function App() {
   if (child === undefined) return <div className="min-h-dvh" />
 
   return (
+    <>
+    <ScreenTracker />
     <Routes>
       {child === null ? (
         <Route path="*" element={<Onboarding />} />
@@ -45,5 +48,6 @@ export default function App() {
         </Route>
       )}
     </Routes>
+    </>
   )
 }
