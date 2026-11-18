@@ -20,7 +20,7 @@ Workflow `.github/workflows/deploy.yml` збирає застосунок під
 
 ## Анонімна статистика (GoatCounter)
 
-Лічильник переглядів екранів без cookies і персональних даних (`src/lib/analytics.ts`): надсилається лише назва екрана (`/sleep`, `/stats`…) і розмір дисплея. Вмикається, коли задано змінну репозиторію **`GOATCOUNTER_CODE`** (Settings → Secrets and variables → Actions → Variables) — код сайту з `<code>.goatcounter.com`. Користувач може вимкнути в налаштуваннях застосунку.
+Лічильник переглядів екранів без cookies і персональних даних (`src/lib/analytics.ts`): надсилається лише назва екрана (`/sleep`, `/stats`…) і розмір дисплея. Код сайту — `mybaby` (статистика: https://mybaby.goatcounter.com); можна змінити змінною репозиторію **`GOATCOUNTER_CODE`** (Settings → Secrets and variables → Actions → Variables). Користувач може вимкнути в налаштуваннях застосунку.
 
 ## Стек
 
