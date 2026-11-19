@@ -63,3 +63,27 @@ export function useSkinCareSince(childId: string, since: number) {
 export function useCustomFoods() {
   return useLiveQuery(() => db.customFoods.filter((f) => !f.deleted_at).toArray(), [])
 }
+
+/** Власні колискові сім'ї, нові зверху. */
+export function useLullabies() {
+  return useLiveQuery(
+    async () => (await db.lullabies.toArray()).filter((l) => !l.deleted_at).sort((a, b) => b.created_at.localeCompare(a.created_at)),
+    [],
+  )
+}
+
+/** Казки дитини, нові зверху. */
+export function useStories(childId: string) {
+  return useLiveQuery(
+    async () => (await db.stories.where('child_id').equals(childId).toArray()).filter((x) => !x.deleted_at).sort((a, b) => b.created_at.localeCompare(a.created_at)),
+    [childId],
+  )
+}
+
+/** undefined — ще вантажиться, null — не існує або видалена. */
+export function useStory(id: string | undefined) {
+  return useLiveQuery(async () => {
+    const s = id ? await db.stories.get(id) : undefined
+    return s && !s.deleted_at ? s : null
+  }, [id])
+}
