@@ -85,6 +85,8 @@
     overscroll-behavior-y: none;
   }
   input, select, button, textarea { font: inherit; color: inherit; }
+  /* Без затримки подвійного тапу (зум) на кнопках — тап спрацьовує одразу. */
+  button, a, [role="button"], input, select, label { touch-action: manipulation; }
   input[type="date"] { min-height: 48px; }
 }
 

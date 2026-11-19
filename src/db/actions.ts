@@ -13,8 +13,15 @@ const touch = <T extends object>(patch: T) => ({ ...patch, updated_at: nowISO() 
 
 // ---------- Сон ----------
 
+/**
+ * Активний запис шукаємо лише серед свіжих (через індекс [child_id+start_at]),
+ * а не перебором усієї історії — інакше з часом кнопки реагують повільніше.
+ */
+const recentFrom = (days: number) => new Date(Date.now() - days * 24 * 3600_000).toISOString()
+
 export async function getActiveSleep(childId: string) {
-  return db.sleeps.where('child_id').equals(childId).filter((s) => !s.end_at && !s.deleted_at).first()
+  return db.sleeps.where('[child_id+start_at]').between([childId, recentFrom(2)], [childId, '\uffff'])
+    .filter((s) => !s.end_at && !s.deleted_at).last()
 }
 
 /** «Заснув». На дитину допускається лише один активний сон. */
@@ -67,7 +74,8 @@ export async function deleteSleep(id: string) {
 // ---------- Груди / пляшечка ----------
 
 export async function getActiveFeeding(childId: string) {
-  return db.feedings.where('child_id').equals(childId).filter((f) => !f.end_at && !f.deleted_at).first()
+  return db.feedings.where('[child_id+start_at]').between([childId, recentFrom(1)], [childId, '\uffff'])
+    .filter((f) => !f.end_at && !f.deleted_at).last()
 }
 
 /** Почати груди. Якщо вже йде годування — завершуємо його (зміна сторони). */
