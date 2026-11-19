@@ -19,6 +19,15 @@ export function useFeedingsSince(childId: string, since: number) {
   }, [childId, since]) ?? []
 }
 
+/** Те саме, але undefined поки йде завантаження (щоб не показувати хибний стан). */
+export function useSleepsSinceState(childId: string, since: number) {
+  return useLiveQuery(async () => {
+    const from = new Date(since - 16 * HOUR).toISOString()
+    const rows = await db.sleeps.where('[child_id+start_at]').between([childId, from], [childId, '\uffff']).toArray()
+    return rows.filter((s) => !s.deleted_at)
+  }, [childId, since])
+}
+
 /** Останні ~2 тижні снів — для патернів і прогнозу. */
 export const useRecentSleeps = (childId: string, dayStart: number) => useSleepsSince(childId, dayStart - 15 * DAY_MS)
 

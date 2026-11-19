@@ -1,8 +1,9 @@
-import type { Child } from '@/db/types'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { Child, SleepKind } from '@/db/types'
 import { addWakeUp, endSleep, getActiveSleep, startSleep } from '@/db/actions'
-import { useRecentSleeps } from '@/db/hooks'
-import { MIN_SAMPLES, sleepForecast, sleepPatterns } from '@/lib/sleep'
-import { formatClock, formatDuration, formatTime, MIN, startOfDay, useNow } from '@/lib/time'
+import { useSleepsSinceState } from '@/db/hooks'
+import { defaultKind, MIN_SAMPLES, sleepForecast, sleepPatterns, type SleepLike } from '@/lib/sleep'
+import { DAY_MS, formatClock, formatDuration, formatTime, MIN, startOfDay, useNow } from '@/lib/time'
 import { IconSleep } from '@/ui/icons'
 import { SleepScene } from './SleepScene'
 
@@ -28,21 +29,52 @@ function Ring({ progress, children }: { progress: number | null; children: React
 /** Головна картка сну: стан, прогноз з власних записів і кнопка в кільці. */
 export function SleepCard({ child }: { child: Child }) {
   const now = useNow(1000)
-  const sleeps = useRecentSleeps(child.id, startOfDay(now))
+  const dbSleeps = useSleepsSinceState(child.id, startOfDay(now) - 15 * DAY_MS)
+  const loading = dbSleeps === undefined
+
+  // Оптимістичний стан: після тапу картка змінюється одразу, не чекаючи бази
+  // (на iPhone після повернення з фону IndexedDB може відповідати із затримкою).
+  const [pending, setPending] = useState<null | { sleeping: true; since: number; kind: SleepKind } | { sleeping: false; at: number }>(null)
+  const busy = useRef(false)
+  const dbSleeping = !!dbSleeps?.some((s) => !s.end_at)
+  useEffect(() => { if (pending && pending.sleeping === dbSleeping) setPending(null) }, [dbSleeping, pending])
+  useEffect(() => {
+    if (!pending) return
+    const t = setTimeout(() => setPending(null), 8000) // запобіжник
+    return () => clearTimeout(t)
+  }, [pending])
+
+  const sleeps: SleepLike[] = useMemo(() => {
+    const base = dbSleeps ?? []
+    if (!pending || pending.sleeping === dbSleeping) return base
+    if (pending.sleeping) return [...base, { start_at: new Date(pending.since).toISOString(), end_at: null, kind: pending.kind }]
+    return base.map((s) => (s.end_at ? s : { ...s, end_at: new Date(pending.at).toISOString() }))
+  }, [dbSleeps, pending, dbSleeping])
+
   const patterns = sleepPatterns(sleeps, now)
   const f = sleepForecast(sleeps, now, patterns)
   const sleeping = f.state === 'sleeping'
-  const active = sleeping ? sleeps.find((s) => !s.end_at) : undefined
+  const active = sleeping ? (dbSleeps ?? []).find((s) => !s.end_at) : undefined
 
-  const toggle = () => (sleeping ? endSleep(child.id) : startSleep(child.id))
+  const toggle = async () => {
+    if (loading || busy.current) return
+    busy.current = true
+    const at = new Date()
+    try {
+      if (sleeping) { setPending({ sleeping: false, at: at.getTime() }); await endSleep(child.id, at) }
+      else { setPending({ sleeping: true, since: at.getTime(), kind: defaultKind(at) }); await startSleep(child.id, at) }
+    } catch { setPending(null) } finally { busy.current = false }
+  }
   const wakeUp = async () => { const a = await getActiveSleep(child.id); if (a) await addWakeUp(a.id) }
 
   let label = 'Сон'
   let value = '—'
-  let sub = 'Відмітьте, коли малюк засне'
+  let sub = loading ? '' : 'Відмітьте, коли малюк засне'
   let progress: number | null = null
 
-  if (f.state === 'sleeping') {
+  if (loading) {
+    // показуємо нейтральну картку, доки не знаємо справжнього стану
+  } else if (f.state === 'sleeping') {
     label = f.kind === 'night' ? `Нічний сон з ${formatTime(f.since)}` : `Спить з ${formatTime(f.since)}`
     value = formatClock(now - f.since)
     const typical = f.kind === 'night' ? patterns.nightDuration : patterns.napDuration[0]
@@ -75,11 +107,13 @@ export function SleepCard({ child }: { child: Child }) {
         <Ring progress={progress}>
           <button
             onClick={toggle}
-            aria-label={sleeping ? 'Прокинувся' : 'Заснув'}
-            className="absolute inset-[10px] flex flex-col items-center justify-center gap-0.5 rounded-full bg-black/15 text-xs font-bold backdrop-blur active:scale-95"
+            disabled={loading}
+            aria-busy={loading}
+            aria-label={loading ? 'Завантаження' : sleeping ? 'Прокинувся' : 'Заснув'}
+            className="absolute inset-[10px] flex flex-col items-center justify-center gap-0.5 rounded-full bg-black/15 text-xs font-bold backdrop-blur active:scale-95 disabled:opacity-60"
           >
             <IconSleep width={22} height={22} />
-            {sleeping ? 'Прокинувся' : 'Заснув'}
+            {loading ? '…' : sleeping ? 'Прокинувся' : 'Заснув'}
           </button>
         </Ring>
       </div>
