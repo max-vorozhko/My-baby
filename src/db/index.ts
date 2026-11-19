@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type {
-  BaseRecord, Child, Family, Feeding, FoodIntro, Meal, Member, Reaction, Setting, SkinCare, SkinCheck, Sleep, CustomFood,
+  BaseRecord, Child, Family, Feeding, FoodIntro, Lullaby, Meal, Member, Reaction, Setting, SkinCare, SkinCheck, Sleep, CustomFood, Story,
 } from './types'
 
 export class MyBabyDB extends Dexie {
@@ -16,6 +16,8 @@ export class MyBabyDB extends Dexie {
   skinChecks!: EntityTable<SkinCheck, 'id'>
   skinCare!: EntityTable<SkinCare, 'id'>
   customFoods!: EntityTable<CustomFood, 'id'>
+  lullabies!: EntityTable<Lullaby, 'id'>
+  stories!: EntityTable<Story, 'id'>
 
   constructor() {
     super('my-baby')
@@ -37,6 +39,10 @@ export class MyBabyDB extends Dexie {
     })
     // v3: власні продукти
     this.version(3).stores({ customFoods: 'id, family_id' })
+    // v4: власні колискові (аудіо-блоби)
+    this.version(4).stores({ lullabies: 'id, family_id' })
+    // v5: казки на ніч
+    this.version(5).stores({ stories: 'id, child_id, [child_id+created_at]' })
   }
 }
 
@@ -110,14 +116,15 @@ export async function updateChild(id: string, patch: Partial<Child>) {
   await db.children.update(id, { ...patch, updated_at: nowISO() })
 }
 
-/** Експорт усіх даних у JSON (ТЗ 6: «Експорт усіх даних»). Фото поки не включаємо. */
+/** Експорт усіх даних у JSON (ТЗ 6: «Експорт усіх даних»). Фото й аудіо поки не включаємо. */
 export async function exportAll() {
   const dump: Record<string, unknown[]> = {}
   for (const table of db.tables) {
     const rows = await table.toArray()
     dump[table.name] = rows.map((r) => {
       const copy = { ...r } as Record<string, unknown>
-      if (copy.photo instanceof Blob) copy.photo = null
+      // Бінарні поля (фото, аудіо) у JSON-експорт не потрапляють.
+      for (const k of Object.keys(copy)) if (copy[k] instanceof Blob) copy[k] = null
       return copy
     })
   }

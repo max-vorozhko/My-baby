@@ -146,6 +146,25 @@ export interface CustomFood extends BaseRecord {
   allergen_code: string | null
 }
 
+/** Власна колискова сім'ї: записана голосом батьків або імпортований файл. Лише на цьому пристрої. */
+export interface Lullaby extends BaseRecord {
+  title: string
+  audio: Blob
+  duration_sec: number | null
+  origin: 'recorded' | 'imported'
+}
+
+/** Казка на ніч, створена AI за темою від батьків. Зберігається лише на цьому пристрої. */
+export interface Story extends BaseRecord {
+  child_id: string
+  /** Тема, яку ввели батьки. */
+  prompt: string
+  title: string
+  text: string
+  length: 'short' | 'medium'
+  favorite: boolean
+}
+
 export interface Setting {
   key: string
   value: unknown

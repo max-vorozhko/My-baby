@@ -1,9 +1,13 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { Child } from '@/db/types'
 import { useRecentSleeps } from '@/db/hooks'
 import { MIN_SAMPLES, daySummary, fmtClockMin, sleepPatterns } from '@/lib/sleep'
 import { DAY_MS, formatDayLabel, formatDuration, MIN, shortDayLabel, startOfDay, useNow } from '@/lib/time'
-import { Card, PageTitle, Section } from '@/ui/kit'
+import { Card, Dot, PageTitle, Section } from '@/ui/kit'
+import { IconBook, IconMusic } from '@/ui/icons'
+import { backendEnabled } from '@/lib/supabase'
+import { usePlayer } from '@/lib/soundPlayer'
 import { daysWord } from '@/lib/age'
 import { SleepCard } from './SleepCard'
 import { SleepEditSheet } from './SleepEditSheet'
@@ -24,6 +28,35 @@ function Row({ time, title, sub }: { time: number; title: string; sub?: string }
   )
 }
 
+/** Вхід у «Засинання»; якщо щось грає — показує що саме. */
+function SoundsLink() {
+  const p = usePlayer()
+  return (
+    <Link to="/sleep/sounds" className="flex min-h-16 items-center gap-3 rounded-3xl bg-surface px-4 py-2 shadow-soft">
+      <Dot tone="sleep"><IconMusic /></Dot>
+      <span className="flex-1">
+        <span className="block font-medium">Засинання</span>
+        <span className="block text-xs text-muted">{p.playing && p.source ? `Грає: ${p.source.title}` : 'Шум, колискові, таймер'}</span>
+      </span>
+      <span aria-hidden className="text-muted">›</span>
+    </Link>
+  )
+}
+
+/** Вхід у «Казку на ніч» (лише коли підключено сервер). */
+function StoriesLink() {
+  return (
+    <Link to="/sleep/stories" className="flex min-h-16 items-center gap-3 rounded-3xl bg-surface px-4 py-2 shadow-soft">
+      <Dot tone="sleep"><IconBook /></Dot>
+      <span className="flex-1">
+        <span className="block font-medium">Казка на ніч</span>
+        <span className="block text-xs text-muted">Розкажіть, що було — вийде казка</span>
+      </span>
+      <span aria-hidden className="text-muted">›</span>
+    </Link>
+  )
+}
+
 export function SleepPage({ child }: { child: Child }) {
   const now = useNow(60_000)
   const today = startOfDay(now)
@@ -40,6 +73,8 @@ export function SleepPage({ child }: { child: Child }) {
     <div className="space-y-5">
       <PageTitle>Сон</PageTitle>
       <SleepCard child={child} />
+      <SoundsLink />
+      {backendEnabled() && <StoriesLink />}
 
       <Section title="Типовий день">
         {ready ? (

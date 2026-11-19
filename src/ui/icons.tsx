@@ -51,3 +51,24 @@ export const IconGear = (p: SVGProps<SVGSVGElement>) => (
 export const IconAlert = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="M12 9v4" /><path d="M12 17h.01" /><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
 )
+export const IconPlay = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base({ fill: 'currentColor', ...p })}><path d="M8 5.5v13a1 1 0 0 0 1.5.9l10.5-6.5a1 1 0 0 0 0-1.8L9.5 4.6A1 1 0 0 0 8 5.5Z" /></svg>
+)
+export const IconPause = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base({ fill: 'currentColor', ...p })}><rect x="6" y="5" width="4" height="14" rx="1.2" /><rect x="14" y="5" width="4" height="14" rx="1.2" /></svg>
+)
+export const IconMic = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0" /><path d="M12 18v3" /></svg>
+)
+export const IconMusic = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M9 18V5l11-2v13" /><circle cx="6.5" cy="18" r="2.5" /><circle cx="17.5" cy="16" r="2.5" /></svg>
+)
+export const IconTrash = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M4 7h16" /><path d="M10 11v6M14 11v6" /><path d="M6 7l1 13h10l1-13" /><path d="M9 7V4h6v3" /></svg>
+)
+export const IconBook = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Z" /><path d="M4 19V5" /><path d="M9 7h6" /></svg>
+)
+export const IconStar = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9Z" /></svg>
+)

@@ -30,6 +30,9 @@ jobs:
           BASE_PATH: /${{ github.event.repository.name }}/
           # Код сайту GoatCounter (Settings → Secrets and variables → Actions → Variables).
           VITE_GOATCOUNTER_CODE: ${{ vars.GOATCOUNTER_CODE || 'mybaby' }}
+          # Казки на ніч: URL і publishable (anon) ключ проєкту Supabase — публічні значення, Variables, не Secrets.
+          VITE_SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
       # GitHub Pages не знає про SPA-маршрути: 404.html віддає застосунок для прямих посилань.
       - run: cp dist/index.html dist/404.html
       - uses: actions/upload-pages-artifact@v3

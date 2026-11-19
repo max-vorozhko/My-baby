@@ -12,6 +12,9 @@ import { Today } from '@/features/today/Today'
 import { FoodPage } from '@/features/food/FoodPage'
 import { FoodsPage } from '@/features/food/FoodsPage'
 import { SleepPage } from '@/features/sleep/SleepPage'
+import { SoundsPage } from '@/features/sleep/SoundsPage'
+import { StoriesPage } from '@/features/sleep/StoriesPage'
+import { StoryPage } from '@/features/sleep/StoryPage'
 import { HealthPage } from '@/features/health/HealthPage'
 import { SkinPage } from '@/features/health/skin/SkinPage'
 import { StatsPage } from '@/features/stats/StatsPage'
@@ -40,6 +43,9 @@ export default function App() {
           <Route path="food" element={<FoodPage child={child} />} />
           <Route path="food/all" element={<FoodsPage child={child} />} />
           <Route path="sleep" element={<SleepPage child={child} />} />
+          <Route path="sleep/sounds" element={<SoundsPage />} />
+          <Route path="sleep/stories" element={<StoriesPage child={child} />} />
+          <Route path="sleep/stories/:id" element={<StoryPage />} />
           <Route path="health" element={<HealthPage child={child} />} />
           <Route path="health/skin" element={<SkinPage child={child} />} />
           <Route path="stats" element={<StatsPage child={child} />} />

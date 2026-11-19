@@ -1,0 +1,6 @@
+# Мінімальна конфігурація для `supabase functions deploy` / локального запуску.
+[functions.generate-story]
+verify_jwt = true
+
+[auth]
+enable_anonymous_sign_ins = true

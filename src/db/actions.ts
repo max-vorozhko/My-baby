@@ -1,5 +1,5 @@
 import { baseFields, db, getSession, nowISO, setSetting, getSetting } from './index'
-import type { BaseRecord, BottleContent, BreastSide, CustomFood, Feeding, SkinCareKind, SkinCheck, Sleep, SleepKind } from './types'
+import type { BaseRecord, Story, BottleContent, BreastSide, CustomFood, Feeding, SkinCareKind, SkinCheck, Sleep, SleepKind } from './types'
 import { defaultKind } from '@/lib/sleep'
 import type { FoodIntroStatus, MealItem, ReactionType } from './types'
 
@@ -209,4 +209,41 @@ export async function addSkinCare(childId: string, kind: SkinCareKind, product =
 
 export async function deleteSkinCare(id: string) {
   await db.skinCare.update(id, touch({ deleted_at: nowISO() }))
+}
+
+
+// ---------- Колискові ----------
+
+export async function addLullaby(input: { title: string; audio: Blob; duration_sec: number | null; origin: 'recorded' | 'imported' }) {
+  const s = await session()
+  const title = input.title.trim() || 'Колискова'
+  await db.lullabies.add({ ...baseFields(s), title, audio: input.audio, duration_sec: input.duration_sec, origin: input.origin })
+}
+
+/** М'яке видалення (для майбутньої синхронізації), але аудіо стираємо одразу — щоб звільнити місце. */
+export async function deleteLullaby(id: string) {
+  await db.lullabies.update(id, touch({ deleted_at: nowISO(), audio: new Blob([]) }))
+}
+
+
+// ---------- Казки ----------
+
+export async function addStory(input: { childId: string; prompt: string; title: string; text: string; length: Story['length'] }) {
+  const s = await session()
+  const story: Story = {
+    ...baseFields(s), child_id: input.childId, prompt: input.prompt, title: input.title, text: input.text,
+    length: input.length, favorite: false,
+  }
+  await db.stories.add(story)
+  return story
+}
+
+export async function toggleStoryFavorite(id: string) {
+  const st = await db.stories.get(id)
+  if (st) await db.stories.update(id, touch({ favorite: !st.favorite }))
+}
+
+/** М'яке видалення; текст стираємо одразу — він особистий. */
+export async function deleteStory(id: string) {
+  await db.stories.update(id, touch({ deleted_at: nowISO(), text: '', title: '', prompt: '' }))
 }
