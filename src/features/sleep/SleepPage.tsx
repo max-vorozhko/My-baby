@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Child } from '@/db/types'
-import { useRecentSleeps } from '@/db/hooks'
+import { useLullabies, useRecentSleeps } from '@/db/hooks'
 import { MIN_SAMPLES, daySummary, fmtClockMin, sleepPatterns } from '@/lib/sleep'
 import { DAY_MS, formatDayLabel, formatDuration, MIN, shortDayLabel, startOfDay, useNow } from '@/lib/time'
 import { Card, Dot, PageTitle, Section } from '@/ui/kit'
-import { IconBook, IconMusic } from '@/ui/icons'
+import { IconBook, IconMic, IconMusic } from '@/ui/icons'
 import { backendEnabled } from '@/lib/supabase'
-import { usePlayer } from '@/lib/soundPlayer'
+import { pause, play, usePlayer } from '@/lib/soundPlayer'
+import { lullabySource, SoundRow } from './SoundRow'
 import { daysWord } from '@/lib/age'
 import { SleepCard } from './SleepCard'
 import { SleepEditSheet } from './SleepEditSheet'
@@ -43,6 +44,32 @@ function SoundsLink() {
   )
 }
 
+/** Власні колискові одразу на екрані «Сон» — щоб не шукати їх у «Засинанні». */
+function MyLullabies() {
+  const p = usePlayer()
+  const lullabies = useLullabies() ?? []
+  if (!lullabies.length) return null
+  const shown = lullabies.slice(0, 3)
+  return (
+    <Section title="Мої колискові"
+      action={lullabies.length > shown.length
+        ? <Link to="/sleep/sounds" className="inline-flex min-h-11 items-center px-2 text-sm text-accent">Усі ({lullabies.length})</Link>
+        : undefined}>
+      <ul className="divide-y divide-line overflow-hidden rounded-3xl bg-surface shadow-soft">
+        {shown.map((l) => {
+          const src = lullabySource(l)
+          const active = p.source?.id === src.id
+          return (
+            <SoundRow key={l.id} title={l.title} icon={<IconMic />} active={active} playing={p.playing}
+              onToggle={() => (active && p.playing ? pause() : void play(src))} />
+          )
+        })}
+      </ul>
+      {p.error && p.source?.kind === 'blob' && <p role="alert" className="mt-2 px-1 text-sm text-sos">{p.error}</p>}
+    </Section>
+  )
+}
+
 /** Вхід у «Казку на ніч» (лише коли підключено сервер). */
 function StoriesLink() {
   return (
@@ -74,6 +101,7 @@ export function SleepPage({ child }: { child: Child }) {
       <PageTitle>Сон</PageTitle>
       <SleepCard child={child} />
       <SoundsLink />
+      <MyLullabies />
       {backendEnabled() && <StoriesLink />}
 
       <Section title="Типовий день">

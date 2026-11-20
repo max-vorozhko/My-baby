@@ -130,9 +130,15 @@ export async function play(src: Source) {
     set({ playing: true, endsAt })
     applyVolume(endsAt === null ? 1 : fadeFactor(endsAt - Date.now(), FADE_MS))
     startTick()
-  } catch {
+  } catch (e) {
     halt()
-    set({ error: 'Не вдалося увімкнути звук. Спробуйте ще раз.' })
+    // NotAllowedError — браузер не дав грати без дотику; інше (NotSupportedError тощо) — файл не декодується.
+    const notAllowed = e instanceof DOMException && e.name === 'NotAllowedError'
+    set({
+      error: src.kind === 'blob' && !notAllowed
+        ? `Не вдалося відтворити «${src.title}» на цьому телефоні. Спробуйте записати її ще раз у застосунку.`
+        : 'Не вдалося увімкнути звук. Спробуйте ще раз.',
+    })
   }
 }
 

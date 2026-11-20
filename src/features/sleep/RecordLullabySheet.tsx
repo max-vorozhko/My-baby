@@ -18,12 +18,13 @@ const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, 
 type Phase = 'idle' | 'recording' | 'review'
 
 /** Запис колискової голосом батьків. Аудіо зберігається лише на цьому телефоні. */
-export function RecordLullabySheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function RecordLullabySheet({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved?: (id: string) => void }) {
   const [phase, setPhase] = useState<Phase>('idle')
   const [secs, setSecs] = useState(0)
   const [title, setTitle] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
   const recorder = useRef<MediaRecorder | null>(null)
   const stream = useRef<MediaStream | null>(null)
   const chunks = useRef<Blob[]>([])
@@ -73,6 +74,12 @@ export function RecordLullabySheet({ open, onClose }: { open: boolean; onClose: 
     rec.onstop = () => {
       release()
       blob.current = new Blob(chunks.current, { type: rec.mimeType || mime })
+      if (!blob.current.size) {
+        blob.current = null
+        setPhase('idle')
+        setError('Запис вийшов порожнім. Спробуйте ще раз — і перевірте, що мікрофон дозволено.')
+        return
+      }
       setPreviewUrl(URL.createObjectURL(blob.current))
       setTitle((t) => t || defaultTitle())
       setPhase('review')
@@ -91,9 +98,17 @@ export function RecordLullabySheet({ open, onClose }: { open: boolean; onClose: 
   const stop = () => recorder.current?.stop()
 
   const save = async () => {
-    if (!blob.current) return
-    await addLullaby({ title, audio: blob.current, duration_sec: secs, origin: 'recorded' })
-    onClose()
+    if (!blob.current || saving) return
+    setSaving(true); setError(null)
+    try {
+      const id = await addLullaby({ title, audio: blob.current, duration_sec: secs, origin: 'recorded' })
+      onSaved?.(id)
+      onClose()
+    } catch {
+      setError('Не вдалося зберегти запис. Можливо, на телефоні замало місця — спробуйте ще раз.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -118,7 +133,7 @@ export function RecordLullabySheet({ open, onClose }: { open: boolean; onClose: 
             <Field label="Назва"><input className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} maxLength={60} /></Field>
             <div className="flex gap-3">
               <Button variant="secondary" className="flex-1" onClick={reset}>Записати знову</Button>
-              <Button className="flex-1" onClick={save} disabled={!title.trim()}>Зберегти</Button>
+              <Button className="flex-1" onClick={save} disabled={!title.trim() || saving}>{saving ? 'Зберігаю…' : 'Зберегти'}</Button>
             </div>
           </>
         )}
