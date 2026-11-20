@@ -5,13 +5,18 @@
  * що й статистика відвідувань (lib/analytics).
  */
 import { analyticsEnabled } from './analytics'
-import { isStandalone } from './storage'
 import { uuid } from '@/db'
 
 const URL_ = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim()
 const KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim()
 const ID_KEY = 'my-baby:device-id'
 const DAY_KEY = 'my-baby:ping-day'
+
+/** Встановлено на головний екран (без імпорту lib/storage, що чіпає window при завантаженні). */
+function installed() {
+  return window.matchMedia?.('(display-mode: standalone)').matches
+    || (navigator as Navigator & { standalone?: boolean }).standalone === true
+}
 
 export const usageAvailable = () => Boolean(URL_ && KEY)
 
@@ -47,7 +52,7 @@ export async function pingUsage() {
     const res = await fetch(`${URL_}/rest/v1/rpc/ping`, {
       method: 'POST',
       headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_device: id, p_installed: isStandalone() }),
+      body: JSON.stringify({ p_device: id, p_installed: installed() }),
       keepalive: true,
     })
     if (res.ok) localStorage.setItem(DAY_KEY, today)
