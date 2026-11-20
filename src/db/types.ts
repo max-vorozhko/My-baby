@@ -149,7 +149,10 @@ export interface CustomFood extends BaseRecord {
 /** Власна колискова сім'ї: записана голосом батьків або імпортований файл. Лише на цьому пристрої. */
 export interface Lullaby extends BaseRecord {
   title: string
-  audio: Blob
+  /** Нові записи — ArrayBuffer (Safari/iOS ненадійно зберігає Blob в IndexedDB); старі можуть бути Blob. */
+  audio: Blob | ArrayBuffer
+  /** MIME аудіо (audio/mp4, audio/webm…) — потрібен, щоб відновити Blob з ArrayBuffer. */
+  audio_type?: string
   duration_sec: number | null
   origin: 'recorded' | 'imported'
 }

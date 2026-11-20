@@ -1,5 +1,5 @@
 import { baseFields, db, getSession, nowISO, setSetting, getSetting } from './index'
-import type { BaseRecord, Story, BottleContent, BreastSide, CustomFood, Feeding, SkinCareKind, SkinCheck, Sleep, SleepKind } from './types'
+import type { BaseRecord, Story, BottleContent, BreastSide, CustomFood, Feeding, Lullaby, SkinCareKind, SkinCheck, Sleep, SleepKind } from './types'
 import { defaultKind } from '@/lib/sleep'
 import type { FoodIntroStatus, MealItem, ReactionType } from './types'
 
@@ -214,15 +214,29 @@ export async function deleteSkinCare(id: string) {
 
 // ---------- Колискові ----------
 
-export async function addLullaby(input: { title: string; audio: Blob; duration_sec: number | null; origin: 'recorded' | 'imported' }) {
+/**
+ * Зберігає колискову; повертає її id. Аудіо кладемо як ArrayBuffer + MIME:
+ * Safari на iPhone інколи зберігає Blob в IndexedDB так, що після перезапуску його не відтворити.
+ */
+export async function addLullaby(input: { title: string; audio: Blob; duration_sec: number | null; origin: 'recorded' | 'imported' }): Promise<string> {
+  if (!input.audio.size) throw new Error('empty audio')
   const s = await session()
   const title = input.title.trim() || 'Колискова'
-  await db.lullabies.add({ ...baseFields(s), title, audio: input.audio, duration_sec: input.duration_sec, origin: input.origin })
+  const audio = await input.audio.arrayBuffer()
+  const base = baseFields(s)
+  await db.lullabies.add({ ...base, title, audio, audio_type: input.audio.type || 'audio/mp4', duration_sec: input.duration_sec, origin: input.origin })
+  return base.id
+}
+
+/** Blob для відтворення — і з нового формату (ArrayBuffer), і зі старого (Blob). */
+export function lullabyBlob(l: Pick<Lullaby, 'audio' | 'audio_type'>): Blob {
+  if (l.audio instanceof Blob) return l.audio
+  return new Blob([l.audio], { type: l.audio_type || 'audio/mp4' })
 }
 
 /** М'яке видалення (для майбутньої синхронізації), але аудіо стираємо одразу — щоб звільнити місце. */
 export async function deleteLullaby(id: string) {
-  await db.lullabies.update(id, touch({ deleted_at: nowISO(), audio: new Blob([]) }))
+  await db.lullabies.update(id, touch({ deleted_at: nowISO(), audio: new ArrayBuffer(0) }))
 }
 
 
