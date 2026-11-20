@@ -34,6 +34,13 @@ Workflow `.github/workflows/deploy.yml` збирає застосунок під
 
 Тексти тем і казок на сервері не зберігаються: у базі лише лічильники генерацій.
 
+## Кількість користувачів
+
+Раз на добу кожен пристрій надсилає в Supabase випадковий ID (без імен і даних) — `src/lib/usagePing.ts`, міграція `supabase/migrations/20261120000000_device_pings.sql`. Вимикається тим самим перемикачем «Анонімна статистика».
+
+Подивитись цифри: Supabase → SQL Editor → `select * from usage_summary();`
+(`dau` / `wau` / `mau` — активні за день / 7 / 30 днів, `devices_total` — усього пристроїв, `installed_total` — встановили на головний екран, `d7_*` / `d30_*` — утримання).
+
 ## Стек
 
 React + Vite + TypeScript, Tailwind CSS v4, vite-plugin-pwa (Workbox), Dexie.js.

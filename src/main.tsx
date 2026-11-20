@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './app/App'
 import { db } from './db'
+import { pingUsage } from './lib/usagePing'
 import '@fontsource/nunito/400.css'
 import '@fontsource/nunito/600.css'
 import '@fontsource/nunito/700.css'
@@ -20,5 +21,11 @@ createRoot(document.getElementById('root')!).render(
 // iOS: після повернення з фону перший запит до IndexedDB іноді «зависає» до наступної дії.
 // Будимо базу одразу, щоб перший тап користувача не чекав.
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') void db.settings.get('session').catch(() => {})
+  if (document.visibilityState === 'visible') {
+    void db.settings.get('session').catch(() => {})
+    void pingUsage()
+  }
 })
+
+// Анонімний щоденний «пульс» (див. lib/usagePing). Не блокує запуск.
+setTimeout(() => void pingUsage(), 3000)
