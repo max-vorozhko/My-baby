@@ -19,6 +19,9 @@ import { HealthPage } from '@/features/health/HealthPage'
 import { SkinPage } from '@/features/health/skin/SkinPage'
 import { StatsPage } from '@/features/stats/StatsPage'
 import { MorePage } from '@/features/more/MorePage'
+import { FoodCalendarPage } from '@/features/food/FoodCalendarPage'
+import { AllergensPage } from '@/features/food/AllergensPage'
+import { FoodStatsPage } from '@/features/stats/FoodStatsPage'
 
 export default function App() {
   const theme = useTheme()
@@ -42,6 +45,8 @@ export default function App() {
           <Route index element={<Today child={child} />} />
           <Route path="food" element={<FoodPage child={child} />} />
           <Route path="food/all" element={<FoodsPage child={child} />} />
+          <Route path="food/calendar" element={<FoodCalendarPage child={child} />} />
+          <Route path="food/allergens" element={<AllergensPage child={child} />} />
           <Route path="sleep" element={<SleepPage child={child} />} />
           <Route path="sleep/sounds" element={<SoundsPage />} />
           <Route path="sleep/stories" element={<StoriesPage child={child} />} />
@@ -49,6 +54,7 @@ export default function App() {
           <Route path="health" element={<HealthPage child={child} />} />
           <Route path="health/skin" element={<SkinPage child={child} />} />
           <Route path="stats" element={<StatsPage child={child} />} />
+          <Route path="stats/food" element={<FoodStatsPage child={child} />} />
           <Route path="more" element={<MorePage child={child} theme={theme} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

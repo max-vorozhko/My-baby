@@ -10,8 +10,8 @@ import { Button, PageTitle, Section } from '@/ui/kit'
 import { ActiveFeeding } from '@/features/feeding/ActiveFeeding'
 import { FeedingSheet } from '@/features/feeding/FeedingSheet'
 import { DayFeed } from '@/features/today/DayFeed'
-import { AllergensCard } from './AllergensCard'
 import { useFoodSheets } from './FoodSheets'
+import { FoodImage } from '@/ui/FoodImage'
 
 export function FoodPage({ child }: { child: Child }) {
   const now = useNow(60_000)
@@ -40,8 +40,8 @@ export function FoodPage({ child }: { child: Child }) {
           <ul className="divide-y divide-line rounded-3xl bg-surface shadow-soft">
             {fresh.map((s) => (
               <li key={s.foodId}>
-                <button onClick={() => sheets.openFood(s.foodId)} className="flex min-h-12 w-full items-center gap-3 px-4 text-left">
-                  <span>{getFood(s.foodId)?.emoji}</span>
+                <button onClick={() => sheets.openFood(s.foodId)} className="flex min-h-14 w-full items-center gap-3 px-3 py-1 text-left">
+                  <FoodImage food={getFood(s.foodId)} size={40} />
                   <span className="flex-1">{getFood(s.foodId)?.name_uk}</span>
                   <span className="text-sm text-muted">{s.daysSince === 0 ? 'вперше сьогодні' : `вперше ${s.daysSince} ${daysWord(s.daysSince)} тому`} · {s.count}×</span>
                 </button>
@@ -52,14 +52,25 @@ export function FoodPage({ child }: { child: Child }) {
       )}
 
       <Section title="Сьогодні" action={<button onClick={() => sheets.openReaction()} className="text-sm text-accent">+ Реакція</button>}>
-        <DayFeed child={child} dayStart={today} show="food" empty="Прикорму сьогодні ще не було" />
+        <DayFeed child={child} dayStart={today} show="food" empty="" />
       </Section>
 
-      <Section title="Алергени"><AllergensCard child={child} onFood={sheets.openFood} /></Section>
-
-      <Link to="/food/all" className="flex min-h-12 items-center justify-between rounded-3xl bg-surface shadow-soft px-4">
-        <span>Усі продукти</span><span className="text-muted">→</span>
-      </Link>
+      <nav className="divide-y divide-line overflow-hidden rounded-3xl bg-surface shadow-soft">
+        {[
+          { to: '/food/calendar', icon: '📅', title: 'Календар прикорму', sub: 'Що їв малюк у будь-який день' },
+          { to: '/food/allergens', icon: '🥚', title: 'Алергени', sub: '9 основних: що вже давали' },
+          { to: '/food/all', icon: '🥕', title: 'Усі продукти', sub: 'Довідник і ваші продукти' },
+        ].map((l) => (
+          <Link key={l.to} to={l.to} className="flex min-h-16 items-center gap-3 px-4 py-2">
+            <span aria-hidden className="flex h-10 w-10 items-center justify-center rounded-2xl bg-food-soft text-xl">{l.icon}</span>
+            <span className="flex-1">
+              <span className="block font-semibold">{l.title}</span>
+              <span className="block text-xs text-muted">{l.sub}</span>
+            </span>
+            <span aria-hidden className="text-muted">›</span>
+          </Link>
+        ))}
+      </nav>
 
       <FeedingSheet open={milkOpen} onClose={() => setMilkOpen(false)} child={child} />
       {sheets.element}

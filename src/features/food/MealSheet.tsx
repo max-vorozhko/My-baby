@@ -6,6 +6,7 @@ import { addCustomFood, addMeal } from '@/db/actions'
 import { foodStats } from '@/lib/food'
 import { Sheet } from '@/ui/Sheet'
 import { Button, inputCls } from '@/ui/kit'
+import { FoodImage } from '@/ui/FoodImage'
 
 /** Запис прийому їжі: нещодавні продукти зверху, пошук, свій продукт. */
 export function MealSheet({ child, open, preselect, onClose }: {
@@ -42,7 +43,8 @@ export function MealSheet({ child, open, preselect, onClose }: {
               const f = getFood(it.food_id)
               return (
                 <li key={it.food_id} className="flex items-center gap-2 rounded-3xl bg-surface shadow-soft p-2 pl-3">
-                  <span className="flex-1 truncate font-medium">{f?.emoji} {f?.name_uk}</span>
+                  <FoodImage food={f} size={40} />
+                  <span className="flex-1 truncate font-medium">{f?.name_uk}</span>
                   <button aria-label="Менше" onClick={() => patch(it.food_id, { amount: Math.max(0, (it.amount ?? 0) - 1) })} className="h-11 w-11 rounded-xl text-xl text-muted">−</button>
                   <span className="w-12 text-center text-sm tabular-nums">{it.amount ?? 0} лож.</span>
                   <button aria-label="Більше" onClick={() => patch(it.food_id, { amount: (it.amount ?? 0) + 1 })} className="h-11 w-11 rounded-xl text-xl text-muted">+</button>
@@ -61,11 +63,13 @@ export function MealSheet({ child, open, preselect, onClose }: {
           <button onClick={addOwn} className="min-h-11 w-full rounded-2xl border border-dashed border-line text-sm text-accent">+ Додати «{q.trim()}»</button>
         )}
 
-        <div className="flex max-h-56 flex-wrap gap-2 overflow-y-auto">
+        <div className="grid max-h-[46dvh] grid-cols-3 gap-2 overflow-y-auto p-0.5">
           {list.map((f) => (
             <button key={f.id} onClick={() => toggle(f.id)} aria-pressed={has(f.id)}
-              className={`min-h-10 rounded-full border px-3 text-sm ${has(f.id) ? 'border-accent bg-accent-soft' : 'border-line bg-surface'}`}>
-              {f.emoji} {f.name_uk}{!ever.has(f.id) && <span className="ml-1 text-xs text-muted">нове</span>}
+              className={`relative flex flex-col items-center gap-1.5 rounded-3xl p-2 pb-2.5 text-center ${has(f.id) ? 'bg-accent-soft ring-2 ring-accent' : 'bg-surface shadow-soft'}`}>
+              <FoodImage food={f} size={64} />
+              <span className="line-clamp-2 text-sm leading-tight font-semibold">{f.name_uk}</span>
+              {!ever.has(f.id) && <span className="absolute top-1.5 right-2 text-[10px] font-bold text-accent">нове</span>}
             </button>
           ))}
         </div>
