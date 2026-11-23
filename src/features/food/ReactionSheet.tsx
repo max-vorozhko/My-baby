@@ -7,6 +7,7 @@ import { topFoods } from '@/lib/food'
 import { DAY_MS, fromLocalInput, toLocalInput } from '@/lib/time'
 import { Sheet } from '@/ui/Sheet'
 import { Button, Emergency103, Field, Segmented, inputCls } from '@/ui/kit'
+import { DateTimeField } from '@/ui/DateTimeField'
 
 const TYPES: { value: ReactionType; label: string }[] = [
   { value: 'rash', label: 'Висип' }, { value: 'tummy', label: 'Животик' }, { value: 'stool', label: 'Стілець' },
@@ -64,7 +65,7 @@ export function ReactionSheet({ child, open, foodId, onClose }: { child: Child; 
             {options.map((id) => <option key={id} value={id}>{getFood(id)?.emoji} {getFood(id)?.name_uk}</option>)}
           </select>
         </Field>
-        <Field label="Коли"><input type="datetime-local" className={inputCls} value={at} onChange={(e) => setAt(e.target.value)} /></Field>
+        <DateTimeField label="Коли" value={at} onChange={setAt} />
         <Field label="Фото">
           <input type="file" accept="image/*" capture="environment" className="block w-full text-sm" onChange={(e) => setPhoto(e.target.files?.[0] ?? null)} />
         </Field>
