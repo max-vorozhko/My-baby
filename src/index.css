@@ -40,6 +40,10 @@
   --color-night-1: #24224f;
   --color-night-2: #33306b;
   --color-night-3: #4b3a6c;
+
+  /* Графіки сну (перевірено на дальтонізм і контраст): нічний / денний. */
+  --color-chart-night: #5b58c4;
+  --color-chart-nap: #c08a1e;
 }
 
 /* Нічна тема: глибокі приглушені тони, без яскравого білого. */
@@ -72,6 +76,8 @@
   --color-night-1: #15142e;
   --color-night-2: #1f1d42;
   --color-night-3: #2e2546;
+  --color-chart-night: #7d7ae6;
+  --color-chart-nap: #b5862a;
 }
 
 @layer base {
