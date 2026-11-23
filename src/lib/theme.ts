@@ -19,7 +19,7 @@ function readPref(): ThemePref {
 
 function apply(dark: boolean) {
   document.documentElement.classList.toggle('dark', dark)
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#17141f' : '#fdf8f3')
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#17141f' : '#fdf6f4')
 }
 
 export function useTheme() {
