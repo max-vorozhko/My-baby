@@ -4,7 +4,8 @@ import { getFood } from '@/data/foods'
 import { ITCH_LONG, TRIGGERS, ZONES, labelOf } from '@/data/skin'
 import { useFeedingsSince, useMarks, useMealsSince, useSkinCareSince, useSkinChecksSince, useSleepsSince } from '@/db/hooks'
 import { allergenRows, topFoods, varietySummary } from '@/lib/food'
-import { fmtClockMin, MIN_SAMPLES, periodAverages, sleepPatterns } from '@/lib/sleep'
+import { MIN_SAMPLES, periodAverages, periodTrend, sleepPatterns } from '@/lib/sleep'
+import { DailyTotals, DaysTimeline, TypicalDay } from './SleepCharts'
 import { feedingStats, skinStats } from '@/lib/stats'
 import { isoDate } from '@/lib/skin'
 import { DAY_MS, formatDuration, MIN, startOfDay, useNow } from '@/lib/time'
@@ -13,6 +14,7 @@ import { Card, PageTitle, Section, Segmented, Stat } from '@/ui/kit'
 
 type Period = '7' | '30' | 'all'
 const PERIOD_DAYS: Record<Period, number> = { '7': 7, '30': 30, all: 365 }
+const sign = (ms: number) => `${ms >= 0 ? '+' : '−'}${formatDuration(Math.abs(ms))}`
 const fmt1 = (n: number) => (Math.round(n * 10) / 10).toLocaleString('uk-UA')
 
 /** Статистика — лише цифри з ваших записів. */
@@ -22,7 +24,8 @@ export function StatsPage({ child }: { child: Child }) {
   const [allFoodsOpen, setAllFoodsOpen] = useState(false)
   const days = PERIOD_DAYS[period]
   const from = period === 'all' ? 0 : startOfDay(now) - (days - 1) * DAY_MS
-  const fromSleep = period === 'all' ? startOfDay(now) - 365 * DAY_MS : from
+  // Для порівняння з попереднім періодом сни беремо за подвійний проміжок.
+  const fromSleep = period === 'all' ? startOfDay(now) - 365 * DAY_MS : startOfDay(now) - (2 * days - 1) * DAY_MS
 
   const meals = useMealsSince(child.id, 0)
   const marks = useMarks(child.id) ?? []
@@ -39,6 +42,10 @@ export function StatsPage({ child }: { child: Child }) {
 
   const sleepAvg = periodAverages(sleeps, Math.min(days, 365), now)
   const pat = sleepPatterns(sleeps, now, Math.min(days, 365))
+  const trend = period === 'all' ? null : periodTrend(sleeps, days, now)
+  // Графіки не починаємо з порожніх днів до першого запису.
+  const firstSleep = sleeps.reduce((m, x) => Math.min(m, new Date(x.start_at).getTime()), now)
+  const chartDays = Math.max(7, Math.min(days, 30, Math.floor((startOfDay(now) - startOfDay(firstSleep)) / DAY_MS) + 1))
   const feed = feedingStats(feedings, from, now)
   const skin = skinStats(checks, care, isoDate(from), from, now)
   const itchTotal = Object.values(skin.itchDays).reduce((a, b) => a + b, 0)
@@ -49,6 +56,40 @@ export function StatsPage({ child }: { child: Child }) {
       <Segmented<Period> value={period} onChange={setPeriod} options={[
         { value: '7', label: '7 днів' }, { value: '30', label: 'Місяць' }, { value: 'all', label: 'Весь час' },
       ]} />
+
+      <Section title="Сон">
+        {sleepAvg.days === 0 ? <Card><p className="text-sm text-muted">Немає повних днів із записами сну.</p></Card> : (
+          <Card className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Stat value={formatDuration(sleepAvg.totalMs)} label="сну за добу" />
+              <Stat value={formatDuration(sleepAvg.nightMs)} label="вночі" />
+              <Stat value={formatDuration(sleepAvg.dayMs)} label="вдень" />
+              <Stat value={fmt1(sleepAvg.naps)} label="денних снів" />
+              <Stat value={fmt1(sleepAvg.wakeUps)} label="пробуджень уночі" />
+              {pat.days >= MIN_SAMPLES && <Stat value={formatDuration(pat.windowBeforeNap[0]?.median * MIN || 0)} label="до 1-го сну" />}
+            </div>
+            {trend && Math.abs(trend.totalDeltaMs) >= 5 * MIN && (
+              <p className="text-sm">
+                {trend.totalDeltaMs > 0 ? '↑' : '↓'} На {formatDuration(Math.abs(trend.totalDeltaMs))} {trend.totalDeltaMs > 0 ? 'більше' : 'менше'} сну за добу, ніж за попередні {days} днів
+                <span className="text-muted"> (ніч {sign(trend.nightDeltaMs)}, день {sign(trend.dayDeltaMs)})</span>
+              </p>
+            )}
+            <p className="text-xs text-muted">Середнє за {sleepAvg.days} днів із записами</p>
+          </Card>
+        )}
+      </Section>
+
+      <Section title="Типовий день">
+        <TypicalDay p={pat} />
+      </Section>
+
+      <Section title={`Сон по днях${period === 'all' ? ' · 30 днів' : ''}`}>
+        <DaysTimeline sleeps={sleeps} days={chartDays} now={now} />
+      </Section>
+
+      <Section title="Скільки спить за добу">
+        <DailyTotals sleeps={sleeps} days={chartDays} now={now} />
+      </Section>
 
       <Section title="Прикорм">
         {top.length === 0 ? <Card><p className="text-sm text-muted">Немає записів за цей період.</p></Card> : (
@@ -98,25 +139,6 @@ export function StatsPage({ child }: { child: Child }) {
             <p className="text-xs text-muted">Не давали: {allergens.filter((a) => a.count === 0).map((a) => a.name.toLowerCase()).join(', ')}</p>
           )}
         </Card>
-      </Section>
-
-      <Section title="Сон">
-        {sleepAvg.days === 0 ? <Card><p className="text-sm text-muted">Немає повних днів із записами сну.</p></Card> : (
-          <Card className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Stat value={formatDuration(sleepAvg.totalMs)} label="сну за добу" />
-              <Stat value={formatDuration(sleepAvg.nightMs)} label="вночі" />
-              <Stat value={formatDuration(sleepAvg.dayMs)} label="вдень" />
-              <Stat value={fmt1(sleepAvg.naps)} label="денних снів" />
-              <Stat value={fmt1(sleepAvg.wakeUps)} label="пробуджень уночі" />
-              {pat.days >= MIN_SAMPLES && <Stat value={formatDuration(pat.windowBeforeNap[0]?.median * MIN || 0)} label="до 1-го сну" />}
-            </div>
-            {pat.days >= MIN_SAMPLES && (
-              <p className="text-sm text-muted">Зазвичай прокидається о ~{fmtClockMin(pat.wakeTime.median)}, засинає на ніч о ~{fmtClockMin(pat.bedtime.median)}.</p>
-            )}
-            <p className="text-xs text-muted">Середнє за {sleepAvg.days} днів із записами</p>
-          </Card>
-        )}
       </Section>
 
       <Section title="Груди / пляшечка">

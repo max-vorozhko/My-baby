@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { daySummary, periodAverages, sleepForecast, sleepPatterns, type SleepLike } from './sleep'
+import { dayTimeline, daySummary, periodAverages, sleepForecast, sleepPatterns, type SleepLike } from './sleep'
 import { getAge } from './age'
 
 // Локальний час: 2026-11-10 — «сьогодні».
@@ -80,5 +80,22 @@ describe('getAge', () => {
   it('months and weeks; corrected age', () => {
     expect(getAge('2026-03-20', 0, new Date(2026, 10, 5))).toMatchObject({ months: 7, weeks: 2 })
     expect(getAge('2026-03-20', 4, new Date(2026, 10, 5)).months).toBe(6)
+  })
+})
+
+describe('dayTimeline', () => {
+  const day = new Date(2026, 10, 10).getTime()
+  const at = (h: number, m = 0) => new Date(day + h * 3600_000 + m * 60_000).toISOString()
+  it('обрізає нічний сон межами доби й сортує', () => {
+    const segs = dayTimeline([
+      { start_at: at(13), end_at: at(14, 30), kind: 'nap' },
+      { start_at: at(-3), end_at: at(7), kind: 'night' },
+      { start_at: at(21), end_at: at(30), kind: 'night' },
+    ], day, day + 2 * 86400_000)
+    expect(segs.map((s) => [s.from, s.to, s.kind])).toEqual([[0, 420, 'night'], [780, 870, 'nap'], [1260, 1440, 'night']])
+  })
+  it('активний сон тягнеться до «зараз»', () => {
+    const segs = dayTimeline([{ start_at: at(10), end_at: null, kind: 'nap' }], day, day + 11 * 3600_000)
+    expect(segs[0].to).toBe(660)
   })
 })

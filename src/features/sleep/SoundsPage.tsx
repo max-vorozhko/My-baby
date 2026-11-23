@@ -1,53 +1,25 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { addLullaby, deleteLullaby } from '@/db/actions'
 import { useLullabies } from '@/db/hooks'
 import type { Lullaby } from '@/db/types'
 import { SOUNDS } from '@/lib/noise'
 import { canSetVolume, pause, play, setTimer, setVolume, TIMER_OPTIONS, usePlayer, type Source } from '@/lib/soundPlayer'
-import { useNow } from '@/lib/time'
+import { formatClock, useNow } from '@/lib/time'
 import { Card, Dot, PageTitle, Section, Segmented } from '@/ui/kit'
-import { IconMic, IconMusic, IconPause, IconPlay, IconSleep, IconTrash } from '@/ui/icons'
+import { IconMic, IconMusic, IconPause, IconPlay, IconSleep } from '@/ui/icons'
 import { RecordLullabySheet } from './RecordLullabySheet'
+import { lullabySource, SoundRow } from './SoundRow'
 
 const MAX_FILE_MB = 40
 
 const soundSource = (s: (typeof SOUNDS)[number]): Source => ({ id: `gen:${s.kind}`, title: s.title, kind: 'generated', sound: s.kind })
-const lullabySource = (l: Lullaby): Source => ({ id: `lul:${l.id}`, title: l.title, kind: 'blob', blob: l.audio })
 
 type TimerValue = '15' | '30' | '60' | 'off'
 const TIMER_SEG: { value: TimerValue; label: string }[] = [
   ...TIMER_OPTIONS.map((m) => ({ value: String(m) as TimerValue, label: `${m} хв` })),
   { value: 'off', label: 'Весь час' },
 ]
-
-/** Рядок зі звуком: натиснули — грає, ще раз — пауза. */
-function SoundRow({ title, sub, icon, active, playing, onToggle, onDelete }: {
-  title: string; sub?: string; icon: React.ReactNode; active: boolean; playing: boolean
-  onToggle: () => void; onDelete?: () => void
-}) {
-  return (
-    <li className="flex items-center gap-2 pr-2">
-      <button onClick={onToggle} aria-pressed={active && playing}
-        aria-label={`${active && playing ? 'Пауза' : 'Увімкнути'}: ${title}`}
-        className="flex min-h-16 flex-1 items-center gap-3 px-4 py-2 text-left">
-        <Dot tone="sleep">{icon}</Dot>
-        <span className="flex-1">
-          <span className={`block font-medium ${active ? 'text-sleep-ink' : ''}`}>{title}</span>
-          {sub && <span className="block text-xs text-muted">{sub}</span>}
-        </span>
-        <span className={`flex h-10 w-10 items-center justify-center rounded-full ${active && playing ? 'bg-sleep text-white dark:text-bg' : 'bg-line text-muted'}`}>
-          {active && playing ? <IconPause width={18} height={18} /> : <IconPlay width={18} height={18} />}
-        </span>
-      </button>
-      {onDelete && (
-        <button onClick={onDelete} aria-label={`Видалити: ${title}`} className="flex h-11 w-11 items-center justify-center rounded-full text-muted">
-          <IconTrash width={18} height={18} />
-        </button>
-      )}
-    </li>
-  )
-}
 
 export function SoundsPage() {
   const p = usePlayer()
@@ -56,6 +28,15 @@ export function SoundsPage() {
   const [recording, setRecording] = useState(false)
   const [fileError, setFileError] = useState<string | null>(null)
   const fileInput = useRef<HTMLInputElement>(null)
+  /** Щойно збережена колискова: підсвічуємо й прокручуємо до неї, показуємо «Збережено». */
+  const [savedId, setSavedId] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!savedId || !lullabies.some((l) => l.id === savedId)) return
+    document.getElementById(`lul-${savedId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const t = setTimeout(() => setSavedId(null), 4000)
+    return () => clearTimeout(t)
+  }, [savedId, lullabies])
 
   const toggle = (src: Source) => {
     if (p.source?.id === src.id && p.playing) pause()
@@ -63,7 +44,8 @@ export function SoundsPage() {
   }
 
   const timerValue: TimerValue = p.timerMin === null ? 'off' : (String(p.timerMin) as TimerValue)
-  const leftMin = p.endsAt === null ? null : Math.max(0, Math.ceil((p.endsAt - now) / 60_000))
+  const leftMs = p.endsAt === null ? null : Math.max(0, p.endsAt - now)
+  const totalMs = p.timerMin === null ? null : p.timerMin * 60_000
   const volumeOk = canSetVolume()
 
   const importFile = async (file: File | undefined) => {
@@ -71,7 +53,12 @@ export function SoundsPage() {
     if (!file) return
     if (!file.type.startsWith('audio/')) return setFileError('Оберіть аудіофайл (mp3, m4a, wav…).')
     if (file.size > MAX_FILE_MB * 1024 * 1024) return setFileError(`Файл завеликий — до ${MAX_FILE_MB} МБ.`)
-    await addLullaby({ title: file.name.replace(/\.[^.]+$/, '').slice(0, 60) || 'Колискова', audio: file, duration_sec: null, origin: 'imported' })
+    try {
+      const id = await addLullaby({ title: file.name.replace(/\.[^.]+$/, '').slice(0, 60) || 'Колискова', audio: file, duration_sec: null, origin: 'imported' })
+      setSavedId(id)
+    } catch {
+      setFileError('Не вдалося зберегти файл. Можливо, на телефоні замало місця.')
+    }
   }
 
   const remove = async (l: Lullaby) => {
@@ -96,39 +83,30 @@ export function SoundsPage() {
           <div className="min-w-0">
             <p className="truncate text-lg font-extrabold">{p.source?.title ?? 'Оберіть звук'}</p>
             <p className="text-sm text-white/70" aria-live="polite">
-              {!p.playing ? 'Не грає' : leftMin === null ? 'Без таймера' : `Вимкнеться через ${leftMin} хв`}
+              {!p.playing
+                ? p.timerMin === null ? 'Не грає' : `Не грає · таймер ${p.timerMin} хв`
+                : leftMs === null ? 'Грає без таймера' : <>Вимкнеться через <b className="tabular-nums text-white">{formatClock(leftMs)}</b></>}
             </p>
           </div>
         </div>
-        {volumeOk ? (
-          <label className="mt-4 block">
-            <span className="mb-1 block text-xs text-white/70">Гучність</span>
-            <input type="range" min={0.05} max={1} step={0.05} value={p.volume} onChange={(e) => setVolume(parseFloat(e.target.value))}
-              className="h-8 w-full accent-white" />
-          </label>
-        ) : (
-          <p className="mt-4 text-xs text-white/70">Гучність — кнопками телефона.</p>
+        {p.playing && leftMs !== null && totalMs && (
+          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/20" aria-hidden>
+            <div className="h-full rounded-full bg-white/80 transition-[width] duration-1000 ease-linear" style={{ width: `${Math.min(100, (leftMs / totalMs) * 100)}%` }} />
+          </div>
         )}
+        <label className="mt-4 block">
+          <span className="mb-1 block text-xs text-white/70">Гучність{!volumeOk && ' · змінюється за мить після того, як відпустите'}</span>
+          <input type="range" min={0.05} max={1} step={0.05} value={p.volume} onChange={(e) => setVolume(parseFloat(e.target.value))}
+            className="h-8 w-full accent-white" />
+        </label>
         {p.error && <p role="alert" className="mt-3 text-sm text-white">{p.error}</p>}
       </section>
 
       <Section title="Таймер">
         <Segmented<TimerValue> value={timerValue} onChange={(v) => setTimer(v === 'off' ? null : Number(v))} options={TIMER_SEG} />
         <p className="mt-2 px-1 text-xs text-muted">
-          {volumeOk ? 'Звук плавно затихає останні 30 секунд.' : 'Звук вимкнеться, коли мине час.'} Ставте тихо й подалі від ліжечка.
+          {volumeOk ? 'Звук плавно затихає останні 30 секунд.' : 'Звук вимкнеться, коли мине час.'} Таймер іде, поки звук грає. Ставте тихо й подалі від ліжечка.
         </p>
-      </Section>
-
-      <Section title="Звуки">
-        <ul className="divide-y divide-line overflow-hidden rounded-3xl bg-surface shadow-soft">
-          {SOUNDS.map((s) => {
-            const src = soundSource(s)
-            return (
-              <SoundRow key={s.kind} title={s.title} sub={s.hint} icon={s.kind === 'musicbox' ? <IconMusic /> : <IconSleep />}
-                active={p.source?.id === src.id} playing={p.playing} onToggle={() => toggle(src)} />
-            )
-          })}
-        </ul>
       </Section>
 
       <Section title="Мої колискові"
@@ -148,19 +126,33 @@ export function SoundsPage() {
             {lullabies.map((l) => {
               const src = lullabySource(l)
               return (
-                <SoundRow key={l.id} title={l.title} sub={l.origin === 'recorded' ? 'Записано в застосунку' : 'Додано файлом'}
+                <SoundRow key={l.id} rowId={`lul-${l.id}`} highlight={savedId === l.id} title={l.title} sub={l.origin === 'recorded' ? 'Записано в застосунку' : 'Додано файлом'}
                   icon={<IconMic />} active={p.source?.id === src.id} playing={p.playing}
                   onToggle={() => toggle(src)} onDelete={() => void remove(l)} />
               )
             })}
           </ul>
         )}
+        {p.error && p.source?.kind === 'blob' && <p role="alert" className="mt-2 px-1 text-sm text-sos">{p.error}</p>}
+        {savedId && <p role="status" className="mt-2 px-1 text-sm font-medium text-sleep-ink">✓ Збережено. Натисніть на колискову, щоб увімкнути.</p>}
         {fileError && <p role="alert" className="mt-2 px-1 text-sm text-sos">{fileError}</p>}
         <input ref={fileInput} type="file" accept="audio/*" hidden
           onChange={(e) => { void importFile(e.target.files?.[0]); e.target.value = '' }} />
       </Section>
 
-      <RecordLullabySheet open={recording} onClose={() => setRecording(false)} />
+      <Section title="Звуки">
+        <ul className="divide-y divide-line overflow-hidden rounded-3xl bg-surface shadow-soft">
+          {SOUNDS.map((s) => {
+            const src = soundSource(s)
+            return (
+              <SoundRow key={s.kind} title={s.title} sub={s.hint} icon={s.kind === 'musicbox' || s.kind === 'swing' ? <IconMusic /> : <IconSleep />}
+                active={p.source?.id === src.id} playing={p.playing} onToggle={() => toggle(src)} />
+            )
+          })}
+        </ul>
+      </Section>
+
+      <RecordLullabySheet open={recording} onClose={() => setRecording(false)} onSaved={setSavedId} />
     </div>
   )
 }

@@ -57,10 +57,11 @@ export function StoryPage() {
         </span>
       </div>
 
-      <article className="space-y-4 px-1">
-        <h1 className="text-[28px] leading-tight font-extrabold">{story.title}</h1>
+      <article className="space-y-5 rounded-[28px] bg-sleep-soft px-5 pt-7 pb-8 text-sleep-ink">
+        <p aria-hidden className="text-center text-sm tracking-[0.5em] opacity-60">✦ ✧ ✦</p>
+        <h1 className="text-balance text-center text-[28px] leading-tight font-extrabold">{story.title}</h1>
         {story.text.split(/\n{2,}/).map((p, i) => (
-          <p key={i} className="text-xl leading-relaxed">{p}</p>
+          <p key={i} className={`text-pretty text-[21px] leading-[1.65] ${i === 0 ? 'first-letter:float-left first-letter:mr-2 first-letter:text-[56px] first-letter:leading-[0.9] first-letter:font-extrabold' : ''}`}>{p}</p>
         ))}
         <p className="pt-2 text-center text-2xl" aria-hidden>🌙</p>
       </article>

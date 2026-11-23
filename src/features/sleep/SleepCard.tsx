@@ -6,6 +6,8 @@ import { defaultKind, MIN_SAMPLES, sleepForecast, sleepPatterns, type SleepLike 
 import { DAY_MS, formatClock, formatDuration, formatTime, MIN, startOfDay, useNow } from '@/lib/time'
 import { IconSleep } from '@/ui/icons'
 import { SleepScene } from './SleepScene'
+import { SleepEditSheet } from './SleepEditSheet'
+import type { Sleep } from '@/db/types'
 
 /** Кільце прогресу навколо кнопки. */
 function Ring({ progress, children }: { progress: number | null; children: React.ReactNode }) {
@@ -55,6 +57,12 @@ export function SleepCard({ child }: { child: Child }) {
   const f = sleepForecast(sleeps, now, patterns)
   const sleeping = f.state === 'sleeping'
   const active = sleeping ? (dbSleeps ?? []).find((s) => !s.end_at) : undefined
+  // Останній завершений сон — щоб виправити час пробудження, якщо «Прокинувся» натиснули пізніше.
+  const lastEnded = !sleeping && !pending
+    ? (dbSleeps ?? []).filter((s) => s.end_at).sort((a, b) => b.end_at!.localeCompare(a.end_at!))[0]
+    : undefined
+  const editable: Sleep | undefined = sleeping ? (pending ? undefined : active) : lastEnded
+  const [editing, setEditing] = useState<Sleep | null>(null)
 
   const toggle = async () => {
     if (loading || busy.current) return
@@ -95,13 +103,26 @@ export function SleepCard({ child }: { child: Child }) {
   }
 
   return (
+    <>
     <section className={`relative overflow-hidden rounded-[28px] bg-linear-to-br p-5 text-white shadow-lift transition-colors duration-700 ${
       f.state === 'sleeping' && f.kind === 'night' ? 'from-night-1 via-night-2 to-night-3' : 'from-dusk-1 via-dusk-2 to-dusk-3'}`}>
       {f.state === 'sleeping' && <SleepScene kind={f.kind} />}
       <div className="relative flex items-center gap-4">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold opacity-85">{label}</p>
-          <p className="mt-0.5 text-[30px] font-extrabold leading-tight tabular-nums">{value}</p>
+          {editable ? (
+            <button onClick={() => setEditing(editable)} className="-m-1 rounded-2xl p-1 text-left active:bg-white/10"
+              aria-label={sleeping ? `${label}. Змінити час засинання` : `${label}. Змінити час пробудження`}>
+              <p className="text-sm font-semibold opacity-85">
+                {label} <span aria-hidden className="ml-1 inline-block rounded-full bg-white/20 px-2 py-0.5 text-xs">✎ {sleeping ? 'змінити' : 'час'}</span>
+              </p>
+              <p className="mt-0.5 text-[30px] font-extrabold leading-tight tabular-nums">{value}</p>
+            </button>
+          ) : (
+            <>
+              <p className="text-sm font-semibold opacity-85">{label}</p>
+              <p className="mt-0.5 text-[30px] font-extrabold leading-tight tabular-nums">{value}</p>
+            </>
+          )}
           {sub && <p className="mt-1 text-sm opacity-95">{sub}</p>}
         </div>
         <Ring progress={progress}>
@@ -121,5 +142,7 @@ export function SleepCard({ child }: { child: Child }) {
         <button onClick={wakeUp} className="relative mt-3 min-h-10 rounded-full bg-white/20 px-4 text-sm font-semibold">+1 пробудження</button>
       )}
     </section>
+    <SleepEditSheet open={!!editing} onClose={() => setEditing(null)} childId={child.id} sleep={editing} />
+    </>
   )
 }

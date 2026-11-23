@@ -5,6 +5,7 @@ import { defaultKind } from '@/lib/sleep'
 import { formatDuration, fromLocalInput, HOUR, toLocalInput } from '@/lib/time'
 import { Sheet } from '@/ui/Sheet'
 import { Button, Field, Segmented, inputCls } from '@/ui/kit'
+import { DateTimeField } from '@/ui/DateTimeField'
 
 /** Ручне редагування або додавання сну (ТЗ 3.3). sleep=null — новий запис. */
 export function SleepEditSheet({
@@ -64,12 +65,9 @@ export function SleepEditSheet({
         <Field label="Тип" group>
           <Segmented<SleepKind> value={kind} onChange={setKind} options={[{ value: 'nap', label: 'Денний' }, { value: 'night', label: 'Нічний' }]} />
         </Field>
-        <Field label="Заснув">
-          <input type="datetime-local" className={inputCls} value={start} onChange={(e) => setStart(e.target.value)} />
-        </Field>
-        <Field label="Прокинувся" hint={sleep && !sleep.end_at ? 'Залиште порожнім, якщо ще спить' : undefined}>
-          <input type="datetime-local" className={inputCls} value={end} onChange={(e) => setEnd(e.target.value)} />
-        </Field>
+        <DateTimeField label="Заснув" value={start} onChange={setStart} />
+        <DateTimeField label="Прокинувся" value={end} onChange={setEnd}
+          emptyText={sleep && !sleep.end_at ? 'Ще спить · вказати час пробудження' : undefined} />
         {kind === 'night' && (
           <Field label="Нічні пробудження" group>
             <div className="flex items-center gap-3">

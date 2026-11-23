@@ -4,6 +4,7 @@ import { deleteFeeding, saveFeeding } from '@/db/actions'
 import { fromLocalInput, HOUR, toLocalInput } from '@/lib/time'
 import { Sheet } from '@/ui/Sheet'
 import { Button, Field, Segmented, inputCls } from '@/ui/kit'
+import { DateTimeField } from '@/ui/DateTimeField'
 
 export function FeedingEditSheet({ feeding, onClose }: { feeding: Feeding | null; onClose: () => void }) {
   const [start, setStart] = useState('')
@@ -52,8 +53,8 @@ export function FeedingEditSheet({ feeding, onClose }: { feeding: Feeding | null
             <Field label="Сторона" group>
               <Segmented<BreastSide> value={side} onChange={setSide} options={[{ value: 'left', label: 'Ліва' }, { value: 'right', label: 'Права' }]} />
             </Field>
-            <Field label="Початок"><input type="datetime-local" className={inputCls} value={start} onChange={(ev) => setStart(ev.target.value)} /></Field>
-            <Field label="Кінець"><input type="datetime-local" className={inputCls} value={end} onChange={(ev) => setEnd(ev.target.value)} /></Field>
+            <DateTimeField label="Початок" value={start} onChange={setStart} />
+            <DateTimeField label="Кінець" value={end} onChange={setEnd} emptyText="Вказати кінець" />
           </>
         ) : (
           <>
@@ -63,7 +64,7 @@ export function FeedingEditSheet({ feeding, onClose }: { feeding: Feeding | null
             <Field label="Кількість, мл">
               <input type="number" inputMode="numeric" className={inputCls} value={amount} onChange={(ev) => setAmount(Number(ev.target.value) || 0)} />
             </Field>
-            <Field label="Час"><input type="datetime-local" className={inputCls} value={start} onChange={(ev) => setStart(ev.target.value)} /></Field>
+            <DateTimeField label="Час" value={start} onChange={setStart} />
           </>
         )}
         {error && <p className="text-sm text-sos">{error}</p>}

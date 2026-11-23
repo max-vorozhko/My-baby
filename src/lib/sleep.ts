@@ -206,3 +206,28 @@ export const fmtClockMin = (m: number) => {
   const mm = Math.round(m) % (24 * 60)
   return `${String(Math.floor(mm / 60)).padStart(2, '0')}:${String(mm % 60).padStart(2, '0')}`
 }
+
+export interface Segment { from: number; to: number; kind: SleepKind; startAt: number; endAt: number | null }
+
+/** Відрізки сну в межах календарної доби, у хвилинах від 00:00 (0..1440) — для графіка «по днях». */
+export function dayTimeline(all: SleepLike[], dayStart: number, now = Date.now()): Segment[] {
+  const dayEnd = dayStart + DAY_MS
+  const out: Segment[] = []
+  for (const s of alive(all)) {
+    const st = t(s.start_at)
+    const en = s.end_at ? t(s.end_at) : null
+    const a = Math.max(st, dayStart)
+    const b = Math.min(en ?? now, dayEnd)
+    if (b <= a) continue
+    out.push({ from: (a - dayStart) / MIN, to: (b - dayStart) / MIN, kind: s.kind, startAt: st, endAt: en })
+  }
+  return out.sort((x, y) => x.from - y.from)
+}
+
+/** Зміна середньої тривалості сну за добу відносно попереднього такого ж періоду. null — немає з чим порівняти. */
+export function periodTrend(all: SleepLike[], days: number, now = Date.now()) {
+  const cur = periodAverages(all, days, now)
+  const prev = periodAverages(all, days, now - days * DAY_MS)
+  if (!cur.days || !prev.days) return null
+  return { totalDeltaMs: cur.totalMs - prev.totalMs, nightDeltaMs: cur.nightMs - prev.nightMs, dayDeltaMs: cur.dayMs - prev.dayMs }
+}

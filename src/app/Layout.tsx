@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { IconChart, IconFood, IconGear, IconHeart, IconPhone, IconSleep, IconToday } from '@/ui/icons'
+import { IconChart, IconFood, IconGear, IconHeart, IconSleep, IconToday } from '@/ui/icons'
 import { SyncBadge } from './SyncBadge'
 
 const tabs = [
@@ -20,18 +20,9 @@ export function Layout() {
         </Link>
       </div>
 
-      <main className="flex-1 px-4 pt-1 pb-[calc(env(safe-area-inset-bottom)+8.5rem)]">
+      <main className="flex-1 px-4 pt-1 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
         <Outlet />
       </main>
-
-      {/* Екстрений виклик — 1 тап з будь-якого екрана. Без медичних інструкцій. */}
-      <a
-        href="tel:103"
-        aria-label="Телефонувати 103"
-        className="fixed right-4 z-20 flex h-12 items-center gap-1.5 rounded-full bg-sos px-4 text-sm font-extrabold text-white shadow-[0_8px_18px_-8px_rgb(220_80_80_/_0.7)] active:scale-95 bottom-[calc(env(safe-area-inset-bottom)+5.25rem)]"
-      >
-        <IconPhone width={18} height={18} /> 103
-      </a>
 
       <nav className="fixed inset-x-0 bottom-0 z-10 rounded-t-[26px] bg-surface/95 shadow-[0_-6px_20px_-12px_rgb(120_80_50_/_0.35)] backdrop-blur pb-[env(safe-area-inset-bottom)]">
         <ul className="mx-auto flex max-w-lg">

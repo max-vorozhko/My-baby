@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  SAMPLE_RATE, brownNoise, encodeWav, fadeFactor, makeLoopable, normalize, renderSound, rms, rng, whiteNoise, SOUNDS,
+  NOISE_LOOP_SEC, SAMPLE_RATE, brownNoise, encodeWav, fadeFactor, makeLoopable, normalize, renderSound, rms, rng, whiteNoise, SOUNDS,
 } from './noise'
 
 describe('rng', () => {
@@ -48,8 +48,19 @@ describe('renderSound', () => {
     expect(rms(x)).toBeGreaterThan(0.02)
     for (let i = 0; i < x.length; i += 97) expect(Math.abs(x[i])).toBeLessThanOrEqual(1)
   })
-  it('серцебиття — рівно 10 с (ціла кількість ударів)', () => {
-    expect(renderSound('heartbeat').length).toBe(SAMPLE_RATE * 10)
+  it('серцебиття — рівно 60 с (ціла кількість ударів)', () => {
+    expect(renderSound('heartbeat').length).toBe(SAMPLE_RATE * 60)
+  })
+  it('шуми — петля 60 с', () => {
+    expect(renderSound('pink').length).toBe(SAMPLE_RATE * NOISE_LOOP_SEC)
+  })
+  it('мелодії тривають 1,5–3 хв і детерміновані', () => {
+    for (const k of ['musicbox', 'swing'] as const) {
+      const a = renderSound(k)
+      expect(a.length / SAMPLE_RATE).toBeGreaterThan(90)
+      expect(a.length / SAMPLE_RATE).toBeLessThan(180)
+      expect(renderSound(k)[12345]).toBe(a[12345])
+    }
   })
 })
 
@@ -66,6 +77,13 @@ describe('encodeWav', () => {
     expect(v.getInt16(46, true)).toBe(16_383) // 0.5 → 0.5 · 32767, відкинуто дробову частину
     expect(v.getInt16(48, true)).toBe(-16_384) // -0.5 → -0.5 · 32768
     expect(v.getInt16(50, true)).toBe(0x7fff)
+  })
+})
+
+describe('encodeWav gain', () => {
+  it('множить семпли на gain', () => {
+    const v = new DataView(encodeWav(new Float32Array([0.5]), 22_050, 0.5).buffer)
+    expect(v.getInt16(44, true)).toBe(8191)
   })
 })
 

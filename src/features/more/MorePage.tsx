@@ -5,7 +5,7 @@ import type { Child } from '@/db/types'
 import type { ThemePref } from '@/lib/theme'
 import { isStandalone, requestPersistence, useInstallPrompt } from '@/lib/storage'
 import { ChildForm, isDraftValid, type ChildDraft } from '@/features/profile/ChildForm'
-import { Button, Card, PageTitle, Segmented } from '@/ui/kit'
+import { Button, Card, Emergency103, PageTitle, Segmented } from '@/ui/kit'
 import { Disclaimer } from '@/ui/Disclaimer'
 import { analyticsAvailable, analyticsEnabled, setAnalyticsEnabled } from '@/lib/analytics'
 import { usageAvailable } from '@/lib/usagePing'
@@ -115,6 +115,7 @@ export function MorePage({ child, theme }: { child: Child; theme: { pref: ThemeP
         <Button variant="ghost" className="w-full text-sos" onClick={wipe}>Видалити всі дані</Button>
       </Card>
 
+      <Emergency103 />
       <Disclaimer />
       <p className="px-2 text-center text-xs text-muted">My Baby v0.1 · У разі небезпеки телефонуйте 103.</p>
     </div>
