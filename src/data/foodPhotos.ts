@@ -4,4 +4,5 @@
  */
 export const FOOD_PHOTOS = new Set<string>([
   'zucchini', 'broccoli', 'cauliflower', 'pumpkin', 'carrot',
+  'sweet_potato', 'potato', 'peas', 'beet', 'cucumber',
 ])
