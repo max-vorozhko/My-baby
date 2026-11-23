@@ -5,7 +5,7 @@ import { useLullabies } from '@/db/hooks'
 import type { Lullaby } from '@/db/types'
 import { SOUNDS } from '@/lib/noise'
 import { canSetVolume, pause, play, setTimer, setVolume, TIMER_OPTIONS, usePlayer, type Source } from '@/lib/soundPlayer'
-import { useNow } from '@/lib/time'
+import { formatClock, useNow } from '@/lib/time'
 import { Card, Dot, PageTitle, Section, Segmented } from '@/ui/kit'
 import { IconMic, IconMusic, IconPause, IconPlay, IconSleep } from '@/ui/icons'
 import { RecordLullabySheet } from './RecordLullabySheet'
@@ -44,7 +44,8 @@ export function SoundsPage() {
   }
 
   const timerValue: TimerValue = p.timerMin === null ? 'off' : (String(p.timerMin) as TimerValue)
-  const leftMin = p.endsAt === null ? null : Math.max(0, Math.ceil((p.endsAt - now) / 60_000))
+  const leftMs = p.endsAt === null ? null : Math.max(0, p.endsAt - now)
+  const totalMs = p.timerMin === null ? null : p.timerMin * 60_000
   const volumeOk = canSetVolume()
 
   const importFile = async (file: File | undefined) => {
@@ -82,26 +83,29 @@ export function SoundsPage() {
           <div className="min-w-0">
             <p className="truncate text-lg font-extrabold">{p.source?.title ?? 'Оберіть звук'}</p>
             <p className="text-sm text-white/70" aria-live="polite">
-              {!p.playing ? 'Не грає' : leftMin === null ? 'Без таймера' : `Вимкнеться через ${leftMin} хв`}
+              {!p.playing
+                ? p.timerMin === null ? 'Не грає' : `Не грає · таймер ${p.timerMin} хв`
+                : leftMs === null ? 'Грає без таймера' : <>Вимкнеться через <b className="tabular-nums text-white">{formatClock(leftMs)}</b></>}
             </p>
           </div>
         </div>
-        {volumeOk ? (
-          <label className="mt-4 block">
-            <span className="mb-1 block text-xs text-white/70">Гучність</span>
-            <input type="range" min={0.05} max={1} step={0.05} value={p.volume} onChange={(e) => setVolume(parseFloat(e.target.value))}
-              className="h-8 w-full accent-white" />
-          </label>
-        ) : (
-          <p className="mt-4 text-xs text-white/70">Гучність — кнопками телефона.</p>
+        {p.playing && leftMs !== null && totalMs && (
+          <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/20" aria-hidden>
+            <div className="h-full rounded-full bg-white/80 transition-[width] duration-1000 ease-linear" style={{ width: `${Math.min(100, (leftMs / totalMs) * 100)}%` }} />
+          </div>
         )}
+        <label className="mt-4 block">
+          <span className="mb-1 block text-xs text-white/70">Гучність{!volumeOk && ' · змінюється за мить після того, як відпустите'}</span>
+          <input type="range" min={0.05} max={1} step={0.05} value={p.volume} onChange={(e) => setVolume(parseFloat(e.target.value))}
+            className="h-8 w-full accent-white" />
+        </label>
         {p.error && <p role="alert" className="mt-3 text-sm text-white">{p.error}</p>}
       </section>
 
       <Section title="Таймер">
         <Segmented<TimerValue> value={timerValue} onChange={(v) => setTimer(v === 'off' ? null : Number(v))} options={TIMER_SEG} />
         <p className="mt-2 px-1 text-xs text-muted">
-          {volumeOk ? 'Звук плавно затихає останні 30 секунд.' : 'Звук вимкнеться, коли мине час.'} Ставте тихо й подалі від ліжечка.
+          {volumeOk ? 'Звук плавно затихає останні 30 секунд.' : 'Звук вимкнеться, коли мине час.'} Таймер іде, поки звук грає. Ставте тихо й подалі від ліжечка.
         </p>
       </Section>
 
@@ -141,7 +145,7 @@ export function SoundsPage() {
           {SOUNDS.map((s) => {
             const src = soundSource(s)
             return (
-              <SoundRow key={s.kind} title={s.title} sub={s.hint} icon={s.kind === 'musicbox' ? <IconMusic /> : <IconSleep />}
+              <SoundRow key={s.kind} title={s.title} sub={s.hint} icon={s.kind === 'musicbox' || s.kind === 'swing' ? <IconMusic /> : <IconSleep />}
                 active={p.source?.id === src.id} playing={p.playing} onToggle={() => toggle(src)} />
             )
           })}
