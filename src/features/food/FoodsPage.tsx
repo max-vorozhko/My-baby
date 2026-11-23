@@ -7,6 +7,7 @@ import { foodStats, latestMarks, statusOf } from '@/lib/food'
 import { PageTitle, inputCls } from '@/ui/kit'
 import { STATUS_DOT } from './status'
 import { useFoodSheets } from './FoodSheets'
+import { FoodImage } from '@/ui/FoodImage'
 
 const CATS = Object.keys(CATEGORY_LABEL) as FoodCategory[]
 
@@ -39,8 +40,8 @@ export function FoodsPage({ child }: { child: Child }) {
           const n = ever.get(f.id)?.count ?? 0
           return (
             <li key={f.id}>
-              <button onClick={() => sheets.openFood(f.id)} className="flex min-h-12 w-full items-center gap-3 px-4 text-left">
-                <span className="w-6 text-center">{f.emoji}</span>
+              <button onClick={() => sheets.openFood(f.id)} className="flex min-h-16 w-full items-center gap-3 px-3 py-1.5 text-left">
+                <FoodImage food={f} size={48} />
                 <span className="flex-1">{f.name_uk}{f.allergen_code && <span className="ml-1.5 text-xs text-muted">алерген</span>}</span>
                 {n > 0 && <span className="text-sm tabular-nums text-muted">{n}×</span>}
                 <i className={`h-2 w-2 rounded-full ${STATUS_DOT[s]}`} />

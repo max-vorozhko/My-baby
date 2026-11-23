@@ -12,6 +12,7 @@ import { Card } from '@/ui/kit'
 import { SleepEditSheet } from '@/features/sleep/SleepEditSheet'
 import { FeedingEditSheet } from '@/features/feeding/FeedingEditSheet'
 import { feedingTitle } from '@/features/feeding/labels'
+import { FoodImage } from '@/ui/FoodImage'
 
 type Item = { t: string; sleep?: Sleep; feeding?: Feeding; meal?: Meal; reaction?: Reaction; care?: SkinCare }
 
@@ -53,6 +54,7 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
   items.sort((a, b) => b.t.localeCompare(a.t))
 
   if (items.length === 0) {
+    if (empty === '') return null
     return <Card className="text-center text-muted">{empty ?? 'Поки порожньо. Натисніть «Заснув» або «Груди / пляшечка».'}</Card>
   }
 
@@ -169,8 +171,8 @@ function RecordView({ view, onClose }: { view: { meal?: Meal; reaction?: Reactio
             {m.items.map((it) => {
               const f = getFood(it.food_id)
               return (
-                <li key={it.food_id} className="flex justify-between rounded-3xl bg-surface shadow-soft px-4 py-3">
-                  <span>{f?.emoji} {f?.name_uk}</span>
+                <li key={it.food_id} className="flex items-center justify-between rounded-3xl bg-surface shadow-soft px-3 py-2">
+                  <span className="flex items-center gap-3"><FoodImage food={f} size={36} />{f?.name_uk}</span>
                   <span className="text-muted">{it.amount ? `${it.amount} лож.` : ''} {it.liked === true ? '👍' : it.liked === false ? '👎' : ''}</span>
                 </li>
               )

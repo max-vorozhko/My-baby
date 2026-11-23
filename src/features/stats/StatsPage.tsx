@@ -1,9 +1,8 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { Child } from '@/db/types'
-import { getFood } from '@/data/foods'
 import { ITCH_LONG, TRIGGERS, ZONES, labelOf } from '@/data/skin'
-import { useFeedingsSince, useMarks, useMealsSince, useSkinCareSince, useSkinChecksSince, useSleepsSince } from '@/db/hooks'
-import { allergenRows, topFoods, varietySummary } from '@/lib/food'
+import { useFeedingsSince, useSkinCareSince, useSkinChecksSince, useSleepsSince } from '@/db/hooks'
 import { MIN_SAMPLES, periodAverages, periodTrend, sleepPatterns } from '@/lib/sleep'
 import { DailyTotals, DaysTimeline, TypicalDay } from './SleepCharts'
 import { feedingStats, skinStats } from '@/lib/stats'
@@ -21,24 +20,16 @@ const fmt1 = (n: number) => (Math.round(n * 10) / 10).toLocaleString('uk-UA')
 export function StatsPage({ child }: { child: Child }) {
   const now = useNow(60_000)
   const [period, setPeriod] = useState<Period>('30')
-  const [allFoodsOpen, setAllFoodsOpen] = useState(false)
   const days = PERIOD_DAYS[period]
   const from = period === 'all' ? 0 : startOfDay(now) - (days - 1) * DAY_MS
   // Для порівняння з попереднім періодом сни беремо за подвійний проміжок.
   const fromSleep = period === 'all' ? startOfDay(now) - 365 * DAY_MS : startOfDay(now) - (2 * days - 1) * DAY_MS
 
-  const meals = useMealsSince(child.id, 0)
-  const marks = useMarks(child.id) ?? []
   const sleeps = useSleepsSince(child.id, fromSleep)
   const feedings = useFeedingsSince(child.id, from)
   const checks = useSkinChecksSince(child.id, isoDate(from))
   const care = useSkinCareSince(child.id, from)
 
-  const top = topFoods(meals, from)
-  const variety = varietySummary(meals, from)
-  const allergens = allergenRows(meals, marks, from)
-  const maxCount = Math.max(1, ...top.map((x) => x.count))
-  const shown = allFoodsOpen ? top : top.slice(0, 8)
 
   const sleepAvg = periodAverages(sleeps, Math.min(days, 365), now)
   const pat = sleepPatterns(sleeps, now, Math.min(days, 365))
@@ -91,55 +82,13 @@ export function StatsPage({ child }: { child: Child }) {
         <DailyTotals sleeps={sleeps} days={chartDays} now={now} />
       </Section>
 
-      <Section title="Прикорм">
-        {top.length === 0 ? <Card><p className="text-sm text-muted">Немає записів за цей період.</p></Card> : (
-          <Card className="space-y-4">
-            <div className="grid grid-cols-3 gap-3">
-              <Stat value={variety.meals} label="прийомів їжі" />
-              <Stat value={variety.distinct} label="різних продуктів" />
-              <Stat value={variety.fresh} label="нових" />
-            </div>
-            <ul className="space-y-2.5">
-              {shown.map((s) => {
-                const f = getFood(s.foodId)
-                const rated = s.liked + s.disliked
-                return (
-                  <li key={s.foodId}>
-                    <div className="flex items-baseline justify-between gap-2 text-sm">
-                      <span className="truncate">{f?.emoji} {f?.name_uk}</span>
-                      <span className="shrink-0 tabular-nums text-muted">
-                        {rated > 0 && <span className="mr-2">👍 {Math.round((s.liked / rated) * 100)}%</span>}
-                        <b className="text-ink">{s.count}</b> {s.count === 1 ? 'раз' : s.count < 5 ? 'рази' : 'разів'}
-                      </span>
-                    </div>
-                    <div className="mt-1 h-1.5 rounded-full bg-line">
-                      <div className="h-1.5 rounded-full bg-food" style={{ width: `${(s.count / maxCount) * 100}%` }} />
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-            {top.length > 8 && (
-              <button onClick={() => setAllFoodsOpen((v) => !v)} className="text-sm text-accent">{allFoodsOpen ? 'Згорнути' : `Усі ${top.length}`}</button>
-            )}
-          </Card>
-        )}
-      </Section>
-
-      <Section title="Алергени">
-        <Card className="space-y-2">
-          {allergens.some((a) => a.count > 0) ? (
-            <div className="flex flex-wrap gap-2">
-              {allergens.filter((a) => a.count > 0).sort((x, y) => y.count - x.count).map((a) => (
-                <span key={a.code} className="rounded-full bg-line/60 px-3 py-1.5 text-sm">{a.name} <b className="tabular-nums">{a.count}</b></span>
-              ))}
-            </div>
-          ) : <p className="text-sm text-muted">За цей період не давали.</p>}
-          {allergens.some((a) => a.count === 0) && (
-            <p className="text-xs text-muted">Не давали: {allergens.filter((a) => a.count === 0).map((a) => a.name.toLowerCase()).join(', ')}</p>
-          )}
-        </Card>
-      </Section>
+      <Link to="/stats/food" className="flex min-h-16 items-center gap-3 rounded-3xl bg-surface px-4 py-2 shadow-soft">
+        <span className="flex-1">
+          <span className="block font-semibold">Прикорм і алергени</span>
+          <span className="block text-xs text-muted">Продукти, різноманітність, алергени</span>
+        </span>
+        <span aria-hidden className="text-muted">›</span>
+      </Link>
 
       <Section title="Груди / пляшечка">
         {feed.days === 0 ? <Card><p className="text-sm text-muted">Немає записів за цей період.</p></Card> : (

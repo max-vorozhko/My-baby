@@ -8,6 +8,7 @@ import { DAY_MS } from '@/lib/time'
 import { Sheet } from '@/ui/Sheet'
 import { Button, Segmented, Stat } from '@/ui/kit'
 import { STATUS_DOT, STATUS_LABEL } from './status'
+import { FoodImage } from '@/ui/FoodImage'
 
 const fmtDate = (ms: number) => new Date(ms).toLocaleDateString('uk-UA', { day: 'numeric', month: 'short' })
 
@@ -33,8 +34,9 @@ export function FoodDetailSheet({ child, foodId, onClose, onReaction, onMeal }: 
   }
 
   return (
-    <Sheet open onClose={onClose} title={`${food.emoji} ${food.name_uk}`}>
+    <Sheet open onClose={onClose} title={food.name_uk}>
       <div className="space-y-4">
+        <div className="flex justify-center"><FoodImage food={food} size={120} /></div>
         <p className="flex items-center gap-2 text-sm text-muted">
           <i className={`h-2 w-2 rounded-full ${STATUS_DOT[status]}`} /> {STATUS_LABEL[status]}
           <span>· {CATEGORY_LABEL[food.category]}</span>
@@ -47,9 +49,7 @@ export function FoodDetailSheet({ child, foodId, onClose, onReaction, onMeal }: 
             <Stat value={fmtDate(st.first)} label={`перша проба · ${days} ${daysWord(days)}`} />
             <Stat value={st.liked || st.disliked ? `${st.liked}/${st.disliked}` : '—'} label="👍 / 👎" />
           </div>
-        ) : (
-          <p className="text-sm text-muted">Ще не записували.</p>
-        )}
+        ) : null}
 
         {status !== 'new' && (
           <div>

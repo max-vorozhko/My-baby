@@ -16,14 +16,14 @@ const TONE: Record<Tone, string> = {
 }
 
 function Widget({ tone, title, value, unit, sub, onClick, children, wide }: {
-  tone: Tone; title: string; value: ReactNode; unit?: string; sub: string; onClick: () => void; children?: ReactNode; wide?: boolean
+  tone: Tone; title: string; value: ReactNode; unit?: string; sub?: string; onClick: () => void; children?: ReactNode; wide?: boolean
 }) {
   return (
     <div role="button" tabIndex={0} onClick={onClick} onKeyDown={(e) => e.key === 'Enter' && onClick()}
       className={`flex cursor-pointer flex-col rounded-3xl p-4 text-left active:scale-[0.98] ${wide ? 'col-span-2' : 'min-h-32'} ${TONE[tone]}`}>
-      <span className="text-sm font-bold">{title}</span>
-      <span className="mt-2 text-[28px] font-extrabold leading-none tabular-nums">{value}{unit && <span className="ml-1 text-base font-bold">{unit}</span>}</span>
-      <span className="mt-1.5 text-xs font-semibold opacity-75">{sub}</span>
+      <span className="text-base font-extrabold">{title}</span>
+      <span className="mt-2 text-[34px] font-extrabold leading-none tabular-nums">{value}{unit && <span className="ml-1 text-lg font-bold">{unit}</span>}</span>
+      {sub && <span className="mt-2 text-sm font-semibold opacity-80">{sub}</span>}
       {children && <span className="mt-auto pt-2">{children}</span>}
     </div>
   )
@@ -57,8 +57,8 @@ export function Widgets({ child, now, onFeeding, onMeal, onReaction, onSkin }: {
   const feedSub = lastFeed
     ? [lastFeed.kind === 'breast' && lastFeed.side ? sideShort[lastFeed.side] : lastFeed.amount_ml ? `${lastFeed.amount_ml} мл` : '',
        lastFeed.kind === 'breast' && lastFeed.end_at ? formatDuration(new Date(lastFeed.end_at).getTime() - new Date(lastFeed.start_at).getTime()) : '',
-       `${feedsToday} за сьогодні`].filter(Boolean).join(' · ')
-    : 'Ще не записували'
+       feedsToday ? `${feedsToday} сьогодні` : ''].filter(Boolean).join(' · ')
+    : undefined
 
   const top = topFoods(meals, weekFrom)[0]
   const perDay = Array.from({ length: 7 }, (_, i) => {
@@ -74,20 +74,20 @@ export function Widgets({ child, now, onFeeding, onMeal, onReaction, onSkin }: {
     <div className="grid grid-cols-2 gap-3">
       <Widget tone="feed" title="Годування" value={fv} unit={fu} sub={feedSub} onClick={onFeeding} />
       <Widget tone="food" title="Прикорм" value={top ? top.count : 0} unit="×" onClick={onMeal}
-        sub={top ? `${foodName(top.foodId).toLowerCase()} за тиждень` : 'Записати прийом їжі'}>
+        sub={top ? `${foodName(top.foodId).toLowerCase()} за тиждень` : undefined}>
         <span className="flex h-7 items-end gap-1" aria-hidden>
           {perDay.map((n, i) => <i key={i} className="flex-1 rounded-sm bg-food-ink/70" style={{ height: `${Math.max(8, (n / maxDay) * 100)}%`, opacity: n ? 0.8 : 0.2 }} />)}
         </span>
       </Widget>
       {child.skin_module ? (
         <Widget tone="skin" title="Шкіра" value={creams} unit={creams === 1 ? 'крем' : 'крему'} onClick={onSkin}
-          sub={checks[0] ? `Свербіж: ${ITCH_LONG[checks[0].itch]}` : 'Огляду сьогодні немає'}>
+          sub={checks[0] ? `Свербіж: ${ITCH_LONG[checks[0].itch]}` : undefined}>
           <button onClick={(e) => { e.stopPropagation(); void addSkinCare(child.id, 'emollient') }}
-            className="min-h-9 rounded-full bg-skin-ink/10 px-3 text-sm font-bold">+ крем</button>
+            className="min-h-10 rounded-full bg-skin-ink/10 px-4 text-base font-bold">+ крем</button>
         </Widget>
       ) : null}
-      <Widget tone="plain" wide={!child.skin_module} title="Реакція" value={<span className="text-[22px]">Записати</span>} onClick={onReaction}
-        sub={lastReaction ? `остання ${agoParts(now - new Date(lastReaction.at).getTime()).join(' ')}` : 'Поки не було'} />
+      <Widget tone="plain" wide={!child.skin_module} title="Реакція" value={<span className="text-2xl">+ Записати</span>} onClick={onReaction}
+        sub={lastReaction ? `остання ${agoParts(now - new Date(lastReaction.at).getTime()).join(' ')}` : undefined} />
     </div>
   )
 }
