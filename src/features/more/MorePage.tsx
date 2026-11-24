@@ -121,7 +121,9 @@ export function MorePage({ child, theme }: { child: Child; theme: { pref: ThemeP
 
       <Emergency103 />
       <Disclaimer />
-      <p className="px-2 text-center text-xs text-muted">My Baby v0.1 · У разі небезпеки телефонуйте 103.</p>
+      <p className="px-2 text-center text-xs text-muted">
+        My Baby v0.1 · <a className="underline" href={`${import.meta.env.BASE_URL}privacy.html`}>Конфіденційність</a> · У разі небезпеки телефонуйте 103.
+      </p>
     </div>
   )
 }
