@@ -65,7 +65,8 @@ Deno.serve(async (req) => {
   // 4. Запит до моделі.
   const { system, user, maxTokens } = buildPrompt(v.value)
   const ctrl = new AbortController()
-  const timeout = setTimeout(() => ctrl.abort(), 55_000)
+  // Довша казка українською може писатися понад хвилину; ліміт Edge Function — 150 с.
+  const timeout = setTimeout(() => ctrl.abort(), 110_000)
   try {
     const res = await fetch(env('ANTHROPIC_API_URL') || 'https://api.anthropic.com/v1/messages', {
       method: 'POST',

@@ -72,3 +72,12 @@ export const IconBook = (p: SVGProps<SVGSVGElement>) => (
 export const IconStar = (p: SVGProps<SVGSVGElement>) => (
   <svg {...base(p)}><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9Z" /></svg>
 )
+export const IconShare = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><path d="M12 3v12" /><path d="m8 7 4-4 4 4" /><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1" /></svg>
+)
+export const IconPlusSquare = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><rect x="4" y="4" width="16" height="16" rx="4" /><path d="M12 8v8M8 12h8" /></svg>
+)
+export const IconDots = (p: SVGProps<SVGSVGElement>) => (
+  <svg {...base(p)}><circle cx="12" cy="5" r="1.2" /><circle cx="12" cy="12" r="1.2" /><circle cx="12" cy="19" r="1.2" /></svg>
+)

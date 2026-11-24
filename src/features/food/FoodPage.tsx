@@ -57,7 +57,7 @@ export function FoodPage({ child }: { child: Child }) {
 
       <nav className="divide-y divide-line overflow-hidden rounded-3xl bg-surface shadow-soft">
         {[
-          { to: '/food/calendar', icon: '📅', title: 'Календар прикорму', sub: 'Що їв малюк у будь-який день' },
+          { to: '/food/calendar', icon: '📅', title: 'Календар їжі', sub: 'Груди, пляшечка й прикорм за будь-який день' },
           { to: '/food/allergens', icon: '🥚', title: 'Алергени', sub: '9 основних: що вже давали' },
           { to: '/food/all', icon: '🥕', title: 'Усі продукти', sub: 'Довідник і ваші продукти' },
         ].map((l) => (

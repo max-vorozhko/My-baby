@@ -90,7 +90,7 @@ export function StatsPage({ child }: { child: Child }) {
         <span aria-hidden className="text-muted">›</span>
       </Link>
 
-      <Section title="Груди / пляшечка">
+      <Section title="Груди / пляшечка" action={<Link to="/food/calendar" className="inline-flex min-h-11 items-center px-2 text-sm text-accent">По днях ›</Link>}>
         {feed.days === 0 ? <Card><p className="text-sm text-muted">Немає записів за цей період.</p></Card> : (
           <Card className="grid grid-cols-2 gap-3">
             <Stat value={fmt1(feed.breastPerDay)} label="прикладань на день" />
