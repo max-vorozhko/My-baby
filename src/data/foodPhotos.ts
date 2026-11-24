@@ -8,4 +8,5 @@ export const FOOD_PHOTOS = new Set<string>([
   'buckwheat', 'oats', 'rice', 'corn_grits', 'wheat',
   'apple', 'pear', 'banana', 'avocado', 'plum',
   'peach', 'blueberry', 'raspberry', 'strawberry', 'grape',
+  'melon', 'turkey', 'chicken', 'beef', 'rabbit',
 ])
