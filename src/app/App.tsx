@@ -7,6 +7,7 @@ import { useCustomFoods } from '@/db/hooks'
 import { setCustomFoods } from '@/data/foods'
 import { Layout } from './Layout'
 import { ScreenTracker } from './ScreenTracker'
+import { AccountNotice } from '@/features/account/Account'
 import { Onboarding } from '@/features/onboarding/Onboarding'
 import { Today } from '@/features/today/Today'
 import { FoodPage } from '@/features/food/FoodPage'
@@ -37,6 +38,7 @@ export default function App() {
   return (
     <>
     <ScreenTracker />
+    <AccountNotice />
     <Routes>
       {child === null ? (
         <Route path="*" element={<Onboarding />} />

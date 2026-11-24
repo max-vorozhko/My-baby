@@ -3,6 +3,8 @@ import { createFamilyWithChild } from '@/db'
 import { ChildForm, emptyChildDraft, isDraftValid, type ChildDraft } from '@/features/profile/ChildForm'
 import { Button, Field, inputCls } from '@/ui/kit'
 import { Disclaimer } from '@/ui/Disclaimer'
+import { GoogleButton } from '@/features/account/Account'
+import { accountsEnabled } from '@/lib/account'
 
 export function Onboarding() {
   const [step, setStep] = useState<0 | 1>(0)
@@ -52,6 +54,12 @@ export function Onboarding() {
             </div>
           </div>
           <Button disabled={!agreed} onClick={() => setStep(1)} className="w-full">Почати</Button>
+          {accountsEnabled() && (
+            <div className="mt-5 space-y-2">
+              <p className="text-center text-sm text-muted">Вже користувались My Baby на іншому телефоні?</p>
+              <GoogleButton>Відновити через Google</GoogleButton>
+            </div>
+          )}
         </>
       ) : (
         <>

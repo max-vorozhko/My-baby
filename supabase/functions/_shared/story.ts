@@ -143,6 +143,6 @@ export interface StoryResponse {
 }
 
 export interface StoryErrorBody {
-  error: 'bad_input' | 'auth' | 'limit' | 'busy' | 'upstream' | 'server'
+  error: 'bad_input' | 'auth' | 'limit' | 'limit_guest' | 'busy' | 'upstream' | 'server'
   message: string
 }

@@ -10,6 +10,8 @@ import { Button, Card, Emergency103, PageTitle, Segmented } from '@/ui/kit'
 import { Disclaimer } from '@/ui/Disclaimer'
 import { analyticsAvailable, analyticsEnabled, setAnalyticsEnabled } from '@/lib/analytics'
 import { usageAvailable } from '@/lib/usagePing'
+import { AccountCard } from '@/features/account/Account'
+import { isSignedIn } from '@/lib/account'
 
 function toDraft(c: Child): ChildDraft {
   return {
@@ -85,6 +87,8 @@ export function MorePage({ child, theme }: { child: Child; theme: { pref: ThemeP
         </label>
       </Card>
 
+      <AccountCard />
+
       <Card>
         <h2 className="mb-1 text-lg font-semibold">Сім'я</h2>
         <p className="text-sm text-muted">Запрошення партнера, няні чи бабусі з'явиться після підключення синхронізації.</p>
@@ -106,7 +110,7 @@ export function MorePage({ child, theme }: { child: Child; theme: { pref: ThemeP
       <Card className="space-y-3">
         <h2 className="text-lg font-semibold">Дані</h2>
         <p className="text-sm text-muted">
-          Усе зберігається лише на цьому телефоні.{' '}
+          {isSignedIn() ? 'Записи зберігаються на телефоні, копія — у вашому акаунті.' : 'Усе зберігається лише на цьому телефоні.'}{' '}
           {persisted === true && 'Браузер не стиратиме дані автоматично.'}
           {persisted === false && !isStandalone() && 'Встановіть застосунок на головний екран, щоб дані не стерлися.'}
         </p>
@@ -117,7 +121,9 @@ export function MorePage({ child, theme }: { child: Child; theme: { pref: ThemeP
 
       <Emergency103 />
       <Disclaimer />
-      <p className="px-2 text-center text-xs text-muted">My Baby v0.1 · У разі небезпеки телефонуйте 103.</p>
+      <p className="px-2 text-center text-xs text-muted">
+        My Baby v0.1 · <a className="underline" href={`${import.meta.env.BASE_URL}privacy.html`}>Конфіденційність</a> · У разі небезпеки телефонуйте 103.
+      </p>
     </div>
   )
 }

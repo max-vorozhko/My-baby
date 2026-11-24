@@ -11,6 +11,8 @@ import { generateStory, StoryError, storiesLeftToday, type StoryLength } from '@
 import { THEME_MAX } from '../../../supabase/functions/_shared/story'
 import { Button, Card, Dot, Field, PageTitle, Section, Segmented, inputCls } from '@/ui/kit'
 import { IconBook, IconMic, IconStar } from '@/ui/icons'
+import { GoogleButton } from '@/features/account/Account'
+import { useAccount } from '@/lib/account'
 
 const EXAMPLES = [
   'Ми ходили в парк і годували качок',
@@ -32,6 +34,8 @@ export function StoriesPage({ child }: { child: Child }) {
   const [consent, setConsent] = useState<boolean | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [needSignIn, setNeedSignIn] = useState(false)
+  const { account } = useAccount()
   const [listening, setListening] = useState(false)
   const [left, setLeft] = useState<number | null>(storiesLeftToday)
   const dictation = useRef<Dictation | null>(null)
@@ -59,7 +63,7 @@ export function StoriesPage({ child }: { child: Child }) {
 
   const submit = async () => {
     dictation.current?.stop()
-    setBusy(true); setError(null)
+    setBusy(true); setError(null); setNeedSignIn(false)
     try {
       const res = await generateStory({
         theme, childName: useName ? child.name : null, length,
@@ -72,7 +76,9 @@ export function StoriesPage({ child }: { child: Child }) {
       setTheme('')
       navigate(`/sleep/stories/${story.id}`)
     } catch (e) {
-      if (alive.current) setError(e instanceof StoryError ? e.message : 'Не вдалося придумати казку. Спробуйте ще раз.')
+      if (!alive.current) return
+      setError(e instanceof StoryError ? e.message : 'Не вдалося придумати казку. Спробуйте ще раз.')
+      setNeedSignIn(e instanceof StoryError && e.code === 'limit_guest')
     } finally {
       if (alive.current) setBusy(false)
     }
@@ -138,6 +144,7 @@ export function StoriesPage({ child }: { child: Child }) {
           </Button>
           {busy && <p className="text-center text-sm text-muted" aria-live="polite">🌙 Можна не виходити з екрана</p>}
           {error && <p role="alert" className="rounded-2xl bg-sos/10 px-4 py-3 text-sm text-sos">{error}</p>}
+          {needSignIn && !account && <GoogleButton>Увійти · 5 казок на день</GoogleButton>}
           {left !== null && !busy && <p className="text-center text-xs text-muted">Сьогодні ще казок: {left}</p>}
         </div>
       )}
