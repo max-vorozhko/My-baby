@@ -22,7 +22,7 @@ const mealTitle = (m: Meal) => m.items.map((i) => getFood(i.food_id)?.name_uk ??
 
 /** Стрічка подій доби; тап по запису — редагування. */
 export function DayFeed({ child, dayStart, show = 'all', empty }: {
-  child: Child; dayStart: number; show?: 'all' | 'sleep' | 'feeding' | 'food'; empty?: string
+  child: Child; dayStart: number; show?: 'all' | 'sleep' | 'feeding' | 'food' | 'eating'; empty?: string
 }) {
   const now = useNow(30_000)
   const dayEnd = dayStart + DAY_MS
@@ -43,10 +43,10 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
     }
   }
   const inDay = (iso: string) => new Date(iso).getTime() < dayEnd
-  if (show === 'all' || show === 'feeding') {
+  if (show === 'all' || show === 'feeding' || show === 'eating') {
     for (const f of feedings) if (inDay(f.start_at)) items.push({ t: f.start_at, feeding: f })
   }
-  if (show === 'all' || show === 'food') {
+  if (show === 'all' || show === 'food' || show === 'eating') {
     for (const m of meals) if (inDay(m.at)) items.push({ t: m.at, meal: m })
     for (const r of reactions) if (inDay(r.at)) items.push({ t: r.at, reaction: r })
   }
