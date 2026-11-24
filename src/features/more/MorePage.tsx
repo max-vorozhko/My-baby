@@ -3,7 +3,8 @@ import { exportAll, updateChild, wipeAll } from '@/db'
 import { setSkinModule } from '@/db/actions'
 import type { Child } from '@/db/types'
 import type { ThemePref } from '@/lib/theme'
-import { isStandalone, requestPersistence, useInstallPrompt } from '@/lib/storage'
+import { isInstalled, isStandalone, requestPersistence } from '@/lib/storage'
+import { openInstallSheet } from '@/features/install/InstallSheet'
 import { ChildForm, isDraftValid, type ChildDraft } from '@/features/profile/ChildForm'
 import { Button, Card, Emergency103, PageTitle, Segmented } from '@/ui/kit'
 import { Disclaimer } from '@/ui/Disclaimer'
@@ -22,7 +23,6 @@ export function MorePage({ child, theme }: { child: Child; theme: { pref: ThemeP
   const [saved, setSaved] = useState(false)
   const [persisted, setPersisted] = useState<boolean | null>(null)
   const [stats, setStats] = useState(analyticsEnabled)
-  const { canPrompt, prompt } = useInstallPrompt()
 
   useEffect(() => { requestPersistence().then(setPersisted) }, [])
 
@@ -110,7 +110,7 @@ export function MorePage({ child, theme }: { child: Child; theme: { pref: ThemeP
           {persisted === true && 'Браузер не стиратиме дані автоматично.'}
           {persisted === false && !isStandalone() && 'Встановіть застосунок на головний екран, щоб дані не стерлися.'}
         </p>
-        {canPrompt && <Button variant="secondary" className="w-full" onClick={prompt}>Встановити на головний екран</Button>}
+        {!isInstalled() && <Button variant="secondary" className="w-full" onClick={openInstallSheet}>Встановити на головний екран</Button>}
         <Button variant="secondary" className="w-full" onClick={download}>Експортувати дані (JSON)</Button>
         <Button variant="ghost" className="w-full text-sos" onClick={wipe}>Видалити всі дані</Button>
       </Card>

@@ -32,7 +32,31 @@ export function isStandalone() {
 }
 
 export function isIOS() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent)
+  const ua = navigator.userAgent
+  // iPadOS 13+ представляється як Mac, але має сенсорний екран.
+  return /iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && navigator.maxTouchPoints > 1)
+}
+
+export function isAndroid() {
+  return /android/i.test(navigator.userAgent)
+}
+
+/** iOS, але не Safari (Chrome, Firefox тощо): кнопка «Поділитися» там в адресному рядку. */
+export function isIOSOtherBrowser() {
+  return isIOS() && /crios|fxios|edgios|opios/i.test(navigator.userAgent)
+}
+
+const INSTALLED_KEY = 'my-baby:installed'
+window.addEventListener('appinstalled', () => {
+  try { localStorage.setItem(INSTALLED_KEY, '1') } catch { /* ignore */ }
+  deferred = null
+  listeners.forEach((l) => l())
+})
+
+/** Уже встановлено (відкрито з іконки) або щойно встановили з цього браузера. */
+export function isInstalled() {
+  if (isStandalone()) return true
+  try { return localStorage.getItem(INSTALLED_KEY) === '1' } catch { return false }
 }
 
 interface BeforeInstallPromptEvent extends Event {
@@ -58,11 +82,15 @@ export function useInstallPrompt() {
   }, [])
   return {
     canPrompt: deferred !== null,
-    prompt: async () => {
-      if (!deferred) return
-      await deferred.prompt()
+    /** Показує системне вікно; повертає true, якщо користувач погодився. */
+    prompt: async (): Promise<boolean> => {
+      if (!deferred) return false
+      const ev = deferred
+      await ev.prompt()
+      const { outcome } = await ev.userChoice.catch(() => ({ outcome: 'dismissed' as const }))
       deferred = null
       force((n) => n + 1)
+      return outcome === 'accepted'
     },
   }
 }

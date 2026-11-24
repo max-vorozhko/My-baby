@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { IconChart, IconFood, IconGear, IconHeart, IconSleep, IconToday } from '@/ui/icons'
 import { SyncBadge } from './SyncBadge'
+import { InstallSheet } from '@/features/install/InstallSheet'
 
 const tabs = [
   { to: '/', label: 'Сьогодні', Icon: IconToday, end: true },
@@ -23,6 +24,8 @@ export function Layout() {
       <main className="flex-1 px-4 pt-1 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
         <Outlet />
       </main>
+
+      <InstallSheet />
 
       <nav className="fixed inset-x-0 bottom-0 z-10 rounded-t-[26px] bg-surface/95 shadow-[0_-6px_20px_-12px_rgb(120_80_50_/_0.35)] backdrop-blur pb-[env(safe-area-inset-bottom)]">
         <ul className="mx-auto flex max-w-lg">

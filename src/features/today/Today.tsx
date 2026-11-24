@@ -8,7 +8,6 @@ import { SleepCard } from '@/features/sleep/SleepCard'
 import { ActiveFeeding } from '@/features/feeding/ActiveFeeding'
 import { FeedingSheet } from '@/features/feeding/FeedingSheet'
 import { useFoodSheets } from '@/features/food/FoodSheets'
-import { InstallHint } from './InstallHint'
 import { DayFeed } from './DayFeed'
 import { Widgets } from './Widgets'
 
@@ -35,8 +34,6 @@ export function Today({ child }: { child: Child }) {
 
       <Widgets child={child} now={now} onFeeding={() => setFeedOpen(true)} onMeal={() => sheets.openMeal()}
         onReaction={() => sheets.openReaction()} onSkin={() => navigate('/health/skin')} />
-
-      <InstallHint />
 
       <Section title="Сьогодні">
         <DayFeed child={child} dayStart={today} />
