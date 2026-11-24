@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './app/App'
 import { db } from './db'
 import { pingUsage } from './lib/usagePing'
+import { autoBackup, handleAuthReturn, isAuthReturn } from './lib/account'
 import '@fontsource/nunito/400.css'
 import '@fontsource/nunito/600.css'
 import '@fontsource/nunito/700.css'
@@ -24,8 +25,12 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     void db.settings.get('session').catch(() => {})
     void pingUsage()
+    void autoBackup()
   }
 })
 
+// Повернулися з Google: забираємо сесію з адреси, далі — відновлення або збереження копії.
+if (isAuthReturn()) void handleAuthReturn().then(() => void pingUsage())
+
 // Анонімний щоденний «пульс» (див. lib/usagePing). Не блокує запуск.
-setTimeout(() => void pingUsage(), 3000)
+setTimeout(() => { void pingUsage(); void autoBackup() }, 3000)

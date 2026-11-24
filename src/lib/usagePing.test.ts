@@ -9,4 +9,11 @@ describe('usage ping cadence', () => {
     expect(shouldPing('2026-11-20', '2026-11-20')).toBe(false)
     expect(shouldPing('2026-11-19', '2026-11-20')).toBe(true)
   })
+
+  it('pings again the same day after Google sign-in, but not after sign-out', () => {
+    expect(shouldPing('2026-11-20', '2026-11-20', true)).toBe(true)
+    expect(shouldPing('2026-11-20|g', '2026-11-20', true)).toBe(false)
+    expect(shouldPing('2026-11-20|g', '2026-11-20', false)).toBe(false)
+    expect(shouldPing('2026-11-19|g', '2026-11-20', true)).toBe(true)
+  })
 })

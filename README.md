@@ -28,15 +28,21 @@ Workflow `.github/workflows/deploy.yml` збирає застосунок під
 
 1. Створіть проєкт Supabase. **Authentication → Providers → Anonymous sign-ins** — увімкнути (вхід без пошти; на нього рахуються ліміти).
 2. Застосуйте `supabase/migrations/*.sql` (таблиця й функції лімітів: `supabase db push` або SQL Editor).
-3. Секрети: `supabase secrets set ANTHROPIC_API_KEY=…`. Необов'язково: `STORY_MODEL` (за замовчуванням `claude-sonnet-5-5`), `STORY_DAILY_LIMIT` (5 казок на пристрій за добу), `STORY_GLOBAL_DAILY_LIMIT` (300 на всіх за добу — стеля витрат), `ALLOWED_ORIGINS`.
+3. Секрети: `supabase secrets set ANTHROPIC_API_KEY=…`. Необов'язково: `STORY_MODEL` (за замовчуванням `claude-sonnet-5-5`), `STORY_DAILY_LIMIT` (5 казок за добу з акаунтом Google), `STORY_DAILY_LIMIT_GUEST` (2 — без входу), `STORY_GLOBAL_DAILY_LIMIT` (300 на всіх за добу — стеля витрат), `ALLOWED_ORIGINS`.
 4. `supabase functions deploy generate-story`.
 5. GitHub → Settings → Secrets and variables → Actions → **Variables**: `SUPABASE_URL` і `SUPABASE_ANON_KEY` (publishable-ключ, він публічний). Для локальної роботи — `.env.local` за зразком `.env.example`.
 
 Тексти тем і казок на сервері не зберігаються: у базі лише лічильники генерацій.
 
+## Вхід через Google і хмарна копія
+
+Без входу все працює локально. З акаунтом Google щоденник (без фото й аудіо колискових) зберігається однією копією в таблиці `backups` (RLS: лише власник, лише не анонімний акаунт) — `src/lib/account.ts`, `src/lib/backup.ts`, міграція `20261124000000_accounts_backup.sql`. Копія оновлюється не частіше ніж раз на годину; якщо на телефоні інша сімʼя, ніж у хмарі, застосунок питає, що залишити.
+
+Налаштування: Google Cloud → OAuth client (Web), Authorized redirect URI — `https://<project>.supabase.co/auth/v1/callback`; Supabase → Authentication → Providers → Google (Client ID і Secret); Authentication → URL Configuration → Site URL і Redirect URLs — адреса застосунку (`https://max-vorozhko.github.io/My-baby/`, для розробки `http://localhost:5173/`).
+
 ## Кількість користувачів
 
-Раз на добу кожен пристрій надсилає в Supabase випадковий ID (без імен і даних) — `src/lib/usagePing.ts`, міграція `supabase/migrations/20261120000000_device_pings.sql`. Вимикається тим самим перемикачем «Анонімна статистика».
+Раз на добу кожен пристрій надсилає в Supabase випадковий ID (без імен і даних) — `src/lib/usagePing.ts`, міграція `supabase/migrations/20261120000000_device_pings.sql`. Вимикається тим самим перемикачем «Анонімна статистика». `select * from usage_summary();` у SQL Editor: `registered_total` — акаунтів Google, `mau_registered` / `mau_guest` — активні за 30 днів з входом і без.
 
 Подивитись цифри: Supabase → SQL Editor → `select * from usage_summary();`
 (`dau` / `wau` / `mau` — активні за день / 7 / 30 днів, `devices_total` — усього пристроїв, `installed_total` — встановили на головний екран, `d7_*` / `d30_*` — утримання).

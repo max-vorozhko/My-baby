@@ -6,6 +6,7 @@
  */
 import { analyticsEnabled } from './analytics'
 import { uuid } from '@/db'
+import { isSignedIn } from './account'
 
 const URL_ = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim()
 const KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim()
@@ -33,9 +34,13 @@ function deviceId(): string | null {
   } catch { return null }
 }
 
-/** Чи треба слати пінг зараз (раз на локальну добу). */
-export function shouldPing(lastDay: string | null, today = localDay()) {
-  return lastDay !== today
+/** Мітка останнього пінгу: день + чи був вхід (щоб у день входу пінг повторився вже з позначкою). */
+export const pingMark = (day: string, signedIn: boolean) => (signedIn ? `${day}|g` : day)
+
+/** Чи треба слати пінг зараз: раз на локальну добу або коли за цю добу людина увійшла через Google. */
+export function shouldPing(last: string | null, today = localDay(), signedIn = false) {
+  if (last === pingMark(today, true)) return false // сьогодні вже позначено і пристрій, і вхід
+  return last !== pingMark(today, signedIn)
 }
 
 export async function pingUsage() {
@@ -45,16 +50,17 @@ export async function pingUsage() {
   let last: string | null = null
   try { last = localStorage.getItem(DAY_KEY) } catch { /* ignore */ }
   const today = localDay()
-  if (!shouldPing(last, today)) return
+  const signedIn = isSignedIn()
+  if (!shouldPing(last, today, signedIn)) return
   const id = deviceId()
   if (!id) return
   try {
     const res = await fetch(`${URL_}/rest/v1/rpc/ping`, {
       method: 'POST',
       headers: { apikey: KEY, Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_device: id, p_installed: installed() }),
+      body: JSON.stringify({ p_device: id, p_installed: installed(), p_signed_in: signedIn }),
       keepalive: true,
     })
-    if (res.ok) localStorage.setItem(DAY_KEY, today)
+    if (res.ok) localStorage.setItem(DAY_KEY, pingMark(today, signedIn))
   } catch { /* офлайн або сервер недоступний — спробуємо при наступному відкритті */ }
 }

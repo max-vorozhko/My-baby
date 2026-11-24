@@ -39,6 +39,8 @@ Deno.serve(async (req) => {
   const { data: auth, error: authErr } = token ? await supabase.auth.getUser(token) : { data: null, error: new Error('no token') }
   if (authErr || !auth?.user) return fail('auth', 'Потрібен вхід. Оновіть застосунок і спробуйте ще раз.', 401, cors)
   const userId = auth.user.id
+  // Гість (анонімний вхід) — 2 казки на день; з акаунтом Google — 5.
+  const guest = auth.user.is_anonymous === true
 
   // 2. Валідація вводу.
   let body: unknown
@@ -47,7 +49,7 @@ Deno.serve(async (req) => {
   if (!v.ok) return fail('bad_input', v.error, 400, cors)
 
   // 3. Ліміти: на користувача і загальний денний (щоб бюджет не можна було спалити).
-  const userLimit = num('STORY_DAILY_LIMIT', 5)
+  const userLimit = guest ? num('STORY_DAILY_LIMIT_GUEST', 2) : num('STORY_DAILY_LIMIT', 5)
   const { data: quota, error: quotaErr } = await supabase.rpc('consume_story_quota', {
     p_user: userId, p_user_limit: userLimit, p_global_limit: num('STORY_GLOBAL_DAILY_LIMIT', 300),
   })
@@ -58,7 +60,9 @@ Deno.serve(async (req) => {
   if (!quota.ok) {
     return quota.reason === 'global'
       ? fail('busy', 'Сьогодні казок дуже багато. Спробуйте завтра.', 429, cors)
-      : fail('limit', `Сьогодні ліміт казок вичерпано (${userLimit}). Нові будуть завтра.`, 429, cors)
+      : guest
+        ? fail('limit_guest', `Сьогодні ${userLimit} безкоштовні казки вже використано. Увійдіть через Google — і буде ${num('STORY_DAILY_LIMIT', 5)} на день.`, 429, cors)
+        : fail('limit', `Сьогодні ліміт казок вичерпано (${userLimit}). Нові будуть завтра.`, 429, cors)
   }
   const refund = () => supabase.rpc('refund_story_quota', { p_user: userId })
 
