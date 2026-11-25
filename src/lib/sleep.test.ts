@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { dayTimeline, daySummary, periodAverages, sleepForecast, sleepPatterns, type SleepLike } from './sleep'
+import { dayTimeline, daySummary, periodAverages, sleepForecast, sleepPatterns, wakeWindows, type SleepLike } from './sleep'
+import { HOUR, MIN } from './time'
 import { getAge } from './age'
 
 // Локальний час: 2026-11-10 — «сьогодні».
@@ -97,5 +98,26 @@ describe('dayTimeline', () => {
   it('активний сон тягнеться до «зараз»', () => {
     const segs = dayTimeline([{ start_at: at(10), end_at: null, kind: 'nap' }], day, day + 11 * 3600_000)
     expect(segs[0].to).toBe(660)
+  })
+})
+
+describe('wake windows', () => {
+  const d0 = new Date(2026, 10, 25).getTime()
+  const at = (h: number, m = 0) => new Date(d0 + h * HOUR + m * MIN).toISOString()
+  const night = { start_at: new Date(d0 - 3 * HOUR).toISOString(), end_at: at(7), kind: 'night' as const }
+  const nap1 = { start_at: at(9, 30), end_at: at(10, 30), kind: 'nap' as const }
+  const nap2 = { start_at: at(13), end_at: at(14), kind: 'nap' as const }
+
+  it('lists gaps between sleeps and the ongoing one', () => {
+    const w = wakeWindows([nap2, night, nap1], d0, d0 + 15 * HOUR)
+    expect(w.map((x) => [(x.to - x.from) / MIN, x.ongoing])).toEqual([[150, false], [150, false], [60, true]])
+  })
+  it('no ongoing window while sleeping', () => {
+    const w = wakeWindows([night, { start_at: at(9), end_at: null, kind: 'nap' as const }], d0, d0 + 10 * HOUR)
+    expect(w).toHaveLength(1)
+    expect(w[0].ongoing).toBe(false)
+  })
+  it('skips implausibly long gaps (missing records)', () => {
+    expect(wakeWindows([night], d0, d0 + 21 * HOUR)).toHaveLength(0)
   })
 })
