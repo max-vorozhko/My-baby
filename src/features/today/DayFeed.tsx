@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import type { Child, Feeding, Meal, Reaction, SkinCare, Sleep } from '@/db/types'
 import { useFeedingsSince, useMealsSince, useReactionsSince, useSkinCareSince, useSleepsSince } from '@/db/hooks'
 import { getFood } from '@/data/foods'
@@ -7,7 +7,7 @@ import { REACTION_LABEL } from '@/features/food/ReactionSheet'
 import { Sheet } from '@/ui/Sheet'
 import { Button } from '@/ui/kit'
 import { DAY_MS, formatDuration, formatTime, useNow } from '@/lib/time'
-import { IconBottle, IconDrop, IconFood, IconSleep } from '@/ui/icons'
+import { IconBottle, IconDrop, IconFood, IconSleep, IconSun } from '@/ui/icons'
 import { Card } from '@/ui/kit'
 import { SleepEditSheet } from '@/features/sleep/SleepEditSheet'
 import { FeedingEditSheet } from '@/features/feeding/FeedingEditSheet'
@@ -64,18 +64,21 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
 
   return (
     <>
-      <ul className="divide-y divide-dashed divide-line overflow-hidden rounded-3xl bg-surface px-1 shadow-soft">
-        {items.map(({ wake, sleep, feeding, meal, reaction, care: c }) => {
+      <ul className="overflow-hidden rounded-3xl bg-surface px-1 shadow-soft">
+        {items.map((item, i) => {
+          const { wake, sleep, feeding, meal, reaction, care: c } = item
+          // Пунктир між записами; біля «неспання» не потрібен — воно саме роздільник.
+          const sep = i > 0 && !wake && !items[i - 1].wake
+          const row = (() => {
           if (wake) {
+            // Неспання — тонкий роздільник між снами: лише тривалість, без повтору часу (він видно в сусідніх снах).
             return (
-              <li key={`wake-${wake.from}`} className="flex min-h-11 items-center gap-3 px-4 py-1.5 text-sm text-muted">
-                <span className="flex w-10 shrink-0 justify-center" aria-hidden>
-                  <span className="h-6 border-l-2 border-dotted border-sleep/40" />
-                </span>
-                <span className="flex-1">
-                  {wake.ongoing ? `Не спить · з ${formatTime(wake.from)}` : `Неспання · ${formatTime(wake.from)}–${formatTime(wake.to)}`}
-                </span>
-                <span className={`tabular-nums ${wake.ongoing ? 'font-semibold text-sleep' : ''}`}>{formatDuration(wake.to - wake.from)}</span>
+              <li key={`wake-${wake.from}`} className="flex items-center gap-3 px-4 py-1"
+                aria-label={`Неспання ${formatDuration(wake.to - wake.from)}`}>
+                <span className="h-px flex-1 bg-line" />
+                <span className="text-xs text-muted">неспання</span>
+                <span className="text-[15px] font-extrabold tabular-nums text-ink">{formatDuration(wake.to - wake.from)}</span>
+                <span className="h-px flex-1 bg-line" />
               </li>
             )
           }
@@ -124,7 +127,7 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
             return (
               <li key={sleep.id}>
                 <button onClick={() => setEditSleep(sleep)} className="flex min-h-16 w-full items-center gap-3 px-4 py-2 text-left">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sleep-soft text-sleep"><IconSleep width={20} height={20} /></span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sleep-soft text-sleep">{sleep.kind === 'night' ? <IconSleep width={20} height={20} /> : <IconSun width={21} height={21} />}</span>
                   <span className="flex-1">
                     <span className="block font-semibold">{sleep.kind === 'night' ? 'Нічний сон' : 'Денний сон'}{!sleep.end_at && ' · спить'}</span>
                     <span className="block text-sm text-muted">
@@ -151,6 +154,8 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
               </button>
             </li>
           )
+          })()
+          return sep ? <Fragment key={`g-${i}`}><li aria-hidden className="mx-3 border-t border-dashed border-line" />{row}</Fragment> : row
         })}
       </ul>
       <SleepEditSheet open={!!editSleep} onClose={() => setEditSleep(null)} childId={child.id} sleep={editSleep} />
