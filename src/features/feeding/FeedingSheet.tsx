@@ -25,8 +25,8 @@ export function FeedingSheet({ open, onClose, child }: { open: boolean; onClose:
   const bottle = async () => { await addBottle(child.id, content, amount); onClose() }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Груди / пляшечка">
-      <p className="mb-2 text-sm text-muted">Груди — запустити таймер</p>
+    <Sheet open={open} onClose={onClose} title="Годування">
+      <p className="mb-2 text-sm font-semibold text-muted">Груди</p>
       <div className="grid grid-cols-2 gap-2">
         {(['left', 'right'] as const).map((side) => (
           <button
@@ -40,7 +40,7 @@ export function FeedingSheet({ open, onClose, child }: { open: boolean; onClose:
         ))}
       </div>
 
-      <p className="mt-6 mb-2 text-sm text-muted">Пляшечка</p>
+      <p className="mt-6 mb-2 text-sm font-semibold text-muted">Пляшечка</p>
       <Segmented<BottleContent> value={content} onChange={setContent} options={[
         { value: 'formula', label: 'Суміш' }, { value: 'breast_milk', label: 'Зціджене' },
       ]} />
@@ -53,7 +53,7 @@ export function FeedingSheet({ open, onClose, child }: { open: boolean; onClose:
         ))}
       </div>
       <label className="mt-3 flex items-center gap-2">
-        <span className="text-sm text-muted">Інша кількість, мл</span>
+        <span className="whitespace-nowrap text-sm text-muted">Інша, мл</span>
         <input type="number" inputMode="numeric" min={5} max={400} className={`${inputCls} w-28`}
           value={amount} onChange={(e) => setAmount(Math.max(0, Math.min(400, Number(e.target.value) || 0)))} />
       </label>
