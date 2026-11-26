@@ -63,14 +63,21 @@ export function MealSheet({ child, open, preselect, onClose }: {
           <button onClick={addOwn} className="min-h-11 w-full rounded-2xl border border-dashed border-line text-sm text-accent">+ Додати «{q.trim()}»</button>
         )}
 
-        <div className="grid max-h-[46dvh] grid-cols-3 gap-2 overflow-y-auto p-0.5">
-          {list.map((f) => (
-            <button key={f.id} onClick={() => toggle(f.id)} aria-pressed={has(f.id)}
-              className={`relative flex flex-col items-center gap-1.5 rounded-3xl p-2 pb-2.5 text-center ${has(f.id) ? 'bg-accent-soft ring-2 ring-accent' : 'bg-surface shadow-soft'}`}>
-              <FoodImage food={f} size={64} />
-              <span className="line-clamp-2 text-sm leading-tight font-semibold">{f.name_uk}</span>
-              {!ever.has(f.id) && <span className="absolute top-1.5 right-2 text-[10px] font-bold text-accent">нове</span>}
-            </button>
+        {/* Без червоних «нове» на кожній плитці: спершу те, що вже їв, далі — ще не пробував. */}
+        <div className="max-h-[46dvh] space-y-3 overflow-y-auto p-0.5">
+          {[list.filter((f) => ever.has(f.id)), list.filter((f) => !ever.has(f.id))].map((group, gi) => group.length > 0 && (
+            <div key={gi}>
+              {(gi === 1 && list.some((f) => ever.has(f.id))) && <p className="mb-2 px-1 text-sm font-semibold text-muted">Ще не пробували</p>}
+              <div className="grid grid-cols-3 gap-2">
+                {group.map((f) => (
+                  <button key={f.id} onClick={() => toggle(f.id)} aria-pressed={has(f.id)}
+                    className={`flex flex-col items-center gap-1.5 rounded-3xl p-2 pb-2.5 text-center ${has(f.id) ? 'bg-accent-soft ring-2 ring-accent' : 'bg-surface shadow-soft'}`}>
+                    <FoodImage food={f} size={64} />
+                    <span className="line-clamp-2 text-sm leading-tight font-semibold">{f.name_uk}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
 
