@@ -3,6 +3,8 @@ import { useOnline } from '@/lib/storage'
 /** Ненав'язливий стан збереження. До синхронізації — лише локально. */
 export function SyncBadge() {
   const online = useOnline()
+  // Онлайн — нічого не показуємо (усе й так зберігається). Помітка лише без інтернету.
+  if (online) return <span />
   return (
     <span className="flex items-center gap-1.5 text-xs text-muted">
       <i className={`h-1.5 w-1.5 rounded-full ${online ? 'bg-food' : 'bg-muted'}`} />

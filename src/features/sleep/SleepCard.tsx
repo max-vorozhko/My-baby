@@ -76,8 +76,8 @@ export function SleepCard({ child }: { child: Child }) {
   const wakeUp = async () => { const a = await getActiveSleep(child.id); if (a) await addWakeUp(a.id) }
 
   let label = 'Сон'
-  let value = '—'
-  let sub = loading ? '' : 'Відмітьте, коли малюк засне'
+  let value = ''
+  let sub = loading ? '' : 'Натисніть, коли малюк засне'
   let progress: number | null = null
 
   if (loading) {
@@ -94,7 +94,7 @@ export function SleepCard({ child }: { child: Child }) {
   } else if (f.state === 'learning') {
     label = 'Не спить'
     value = formatDuration(f.awakeMs)
-    sub = `Прогноз — після ${MIN_SAMPLES} днів записів`
+    sub = '' // прогноз зʼявиться сам, коли буде досить записів
   } else if (f.state === 'awake' || f.state === 'past') {
     label = 'Не спить'
     value = formatDuration(f.awakeMs)
@@ -110,20 +110,19 @@ export function SleepCard({ child }: { child: Child }) {
       <div className="relative flex items-center gap-4">
         <div className="min-w-0 flex-1">
           {editable ? (
+            // Тап по назві й часу — змінити час (без окремої плашки «✎ час»).
             <button onClick={() => setEditing(editable)} className="-m-1 rounded-2xl p-1 text-left active:bg-white/10"
               aria-label={sleeping ? `${label}. Змінити час засинання` : `${label}. Змінити час пробудження`}>
-              <p className="text-sm font-semibold opacity-85">
-                {label} <span aria-hidden className="ml-1 inline-block rounded-full bg-white/20 px-2 py-0.5 text-xs">✎ {sleeping ? 'змінити' : 'час'}</span>
-              </p>
-              <p className="mt-0.5 text-[30px] font-extrabold leading-tight tabular-nums">{value}</p>
+              <p className="text-[clamp(22px,6.8vw,28px)] font-extrabold leading-tight tracking-tight">{label}</p>
+              <p className="mt-0.5 text-[32px] font-extrabold leading-tight tabular-nums">{value}</p>
             </button>
           ) : (
             <>
-              <p className="text-sm font-semibold opacity-85">{label}</p>
-              <p className="mt-0.5 text-[30px] font-extrabold leading-tight tabular-nums">{value}</p>
+              <p className="text-[clamp(22px,6.8vw,28px)] font-extrabold leading-tight tracking-tight">{label}</p>
+              {value && <p className="mt-0.5 text-[32px] font-extrabold leading-tight tabular-nums">{value}</p>}
             </>
           )}
-          {sub && <p className="mt-1 text-sm opacity-95">{sub}</p>}
+          {sub && <p className="mt-1 text-[13px] font-semibold opacity-75">{sub}</p>}
         </div>
         <Ring progress={progress}>
           <button

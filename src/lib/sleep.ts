@@ -231,3 +231,36 @@ export function periodTrend(all: SleepLike[], days: number, now = Date.now()) {
   if (!cur.days || !prev.days) return null
   return { totalDeltaMs: cur.totalMs - prev.totalMs, nightDeltaMs: cur.nightMs - prev.nightMs, dayDeltaMs: cur.dayMs - prev.dayMs }
 }
+
+export interface WakeWindow {
+  /** Кінець попереднього сну (мс). */
+  from: number
+  /** Початок наступного сну або «зараз», якщо малюк ще не спить. */
+  to: number
+  ongoing: boolean
+}
+
+/** Довше за це — швидше за все, просто не записали сон; такий проміжок не показуємо. */
+export const MAX_WAKE_MS = 12 * HOUR
+
+/**
+ * Проміжки неспання між снами, що перетинаються з добою [dayStart, dayStart+24 год).
+ * Останній — від кінця останнього сну до «зараз», якщо малюк не спить.
+ */
+export function wakeWindows(all: SleepLike[], dayStart: number, now = Date.now()): WakeWindow[] {
+  const dayEnd = dayStart + DAY_MS
+  const list = alive(all).sort((a, b) => t(a.start_at) - t(b.start_at))
+  const out: WakeWindow[] = []
+  for (let i = 0; i < list.length; i++) {
+    const end = list[i].end_at
+    if (!end) continue
+    const from = t(end)
+    const next = list[i + 1]
+    const ongoing = !next
+    const to = next ? t(next.start_at) : now
+    if (to <= from || to - from > MAX_WAKE_MS) continue
+    if (to <= dayStart || from >= dayEnd) continue
+    out.push({ from, to, ongoing })
+  }
+  return out
+}

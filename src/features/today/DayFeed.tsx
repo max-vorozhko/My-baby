@@ -13,8 +13,9 @@ import { SleepEditSheet } from '@/features/sleep/SleepEditSheet'
 import { FeedingEditSheet } from '@/features/feeding/FeedingEditSheet'
 import { feedingTitle } from '@/features/feeding/labels'
 import { FoodImage } from '@/ui/FoodImage'
+import { wakeWindows, type WakeWindow } from '@/lib/sleep'
 
-type Item = { t: string; sleep?: Sleep; feeding?: Feeding; meal?: Meal; reaction?: Reaction; care?: SkinCare }
+type Item = { t: string; wake?: WakeWindow; sleep?: Sleep; feeding?: Feeding; meal?: Meal; reaction?: Reaction; care?: SkinCare }
 
 const CARE_LABEL = { emollient: 'Крем-емолент', bath: 'Купання', prescribed: 'Засіб від лікаря' } as const
 
@@ -41,6 +42,9 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
       const end = s.end_at ? new Date(s.end_at).getTime() : now
       if (end > dayStart && new Date(s.start_at).getTime() < dayEnd) items.push({ t: s.start_at, sleep: s })
     }
+    // Проміжки неспання між снами — щоб було видно не лише скільки спав, а й скільки не спав.
+    // Поточне «не спить» уже видно на великій картці сну — у стрічці лише завершені проміжки.
+    for (const w of wakeWindows(sleeps, dayStart, now).filter((x) => !x.ongoing)) items.push({ t: new Date(w.from).toISOString(), wake: w })
   }
   const inDay = (iso: string) => new Date(iso).getTime() < dayEnd
   if (show === 'all' || show === 'feeding' || show === 'eating') {
@@ -55,13 +59,26 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
 
   if (items.length === 0) {
     if (empty === '') return null
-    return <Card className="text-center text-muted">{empty ?? 'Поки порожньо. Натисніть «Заснув» або «Груди / пляшечка».'}</Card>
+    return <Card className="text-center text-muted">{empty ?? 'Записів за сьогодні ще немає'}</Card>
   }
 
   return (
     <>
       <ul className="divide-y divide-dashed divide-line overflow-hidden rounded-3xl bg-surface px-1 shadow-soft">
-        {items.map(({ sleep, feeding, meal, reaction, care: c }) => {
+        {items.map(({ wake, sleep, feeding, meal, reaction, care: c }) => {
+          if (wake) {
+            return (
+              <li key={`wake-${wake.from}`} className="flex min-h-11 items-center gap-3 px-4 py-1.5 text-sm text-muted">
+                <span className="flex w-10 shrink-0 justify-center" aria-hidden>
+                  <span className="h-6 border-l-2 border-dotted border-sleep/40" />
+                </span>
+                <span className="flex-1">
+                  {wake.ongoing ? `Не спить · з ${formatTime(wake.from)}` : `Неспання · ${formatTime(wake.from)}–${formatTime(wake.to)}`}
+                </span>
+                <span className={`tabular-nums ${wake.ongoing ? 'font-semibold text-sleep' : ''}`}>{formatDuration(wake.to - wake.from)}</span>
+              </li>
+            )
+          }
           if (c) {
             return (
               <li key={c.id}>
