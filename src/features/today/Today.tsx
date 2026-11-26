@@ -21,12 +21,9 @@ export function Today({ child }: { child: Child }) {
 
   return (
     <div className="space-y-5">
-      <header className="flex items-center gap-3 px-1">
-        <span className="flex h-13 w-13 items-center justify-center rounded-full bg-linear-to-br from-feed-soft to-accent-soft text-2xl" aria-hidden>👶</span>
-        <div>
-          <h1 className="text-[26px] font-extrabold leading-tight">{child.name}</h1>
-          <p className="text-sm font-semibold text-muted">{formatAge(age)}</p>
-        </div>
+      <header className="px-1">
+        <h1 className="text-[30px] font-extrabold leading-tight">{child.name}</h1>
+        <p className="text-sm font-semibold text-muted">{formatAge(age)}</p>
       </header>
 
       <SleepCard child={child} />

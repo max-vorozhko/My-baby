@@ -43,7 +43,8 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
       if (end > dayStart && new Date(s.start_at).getTime() < dayEnd) items.push({ t: s.start_at, sleep: s })
     }
     // Проміжки неспання між снами — щоб було видно не лише скільки спав, а й скільки не спав.
-    for (const w of wakeWindows(sleeps, dayStart, now)) items.push({ t: new Date(w.from).toISOString(), wake: w })
+    // Поточне «не спить» уже видно на великій картці сну — у стрічці лише завершені проміжки.
+    for (const w of wakeWindows(sleeps, dayStart, now).filter((x) => !x.ongoing)) items.push({ t: new Date(w.from).toISOString(), wake: w })
   }
   const inDay = (iso: string) => new Date(iso).getTime() < dayEnd
   if (show === 'all' || show === 'feeding' || show === 'eating') {
@@ -58,7 +59,7 @@ export function DayFeed({ child, dayStart, show = 'all', empty }: {
 
   if (items.length === 0) {
     if (empty === '') return null
-    return <Card className="text-center text-muted">{empty ?? 'Поки порожньо. Натисніть «Заснув» або «Груди / пляшечка».'}</Card>
+    return <Card className="text-center text-muted">{empty ?? 'Записів за сьогодні ще немає'}</Card>
   }
 
   return (
