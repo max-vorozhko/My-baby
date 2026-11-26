@@ -17,7 +17,7 @@ const TONE: Record<Tone, string> = {
 
 /**
  * Плитка-кнопка: велика назва («що це»), одне головне число, максимум один короткий рядок.
- * Без даних — лише назва і «+»: зрозуміло, що тап додає запис.
+ * Без даних — лише назва; уся плитка — кнопка запису.
  */
 function Widget({ tone, title, value, unit, sub, onClick, children }: {
   tone: Tone; title: string; value?: ReactNode; unit?: string; sub?: string; onClick: () => void; children?: ReactNode
@@ -25,10 +25,7 @@ function Widget({ tone, title, value, unit, sub, onClick, children }: {
   return (
     <div role="button" tabIndex={0} onClick={onClick} onKeyDown={(e) => e.key === 'Enter' && onClick()}
       className={`relative flex ${value === undefined ? 'min-h-24' : 'min-h-36'} cursor-pointer flex-col rounded-3xl p-4 text-left active:scale-[0.98] ${TONE[tone]}`}>
-      <span className="flex items-start justify-between gap-2">
-        <span className="text-[21px] font-extrabold leading-tight">{title}</span>
-        <span aria-hidden className="-mr-1 -mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-current/10 text-xl font-bold leading-none">+</span>
-      </span>
+      <span className="text-[clamp(21px,6.4vw,27px)] font-extrabold leading-[1.1] tracking-tight">{title}</span>
       {value !== undefined && (
         <span className="mt-3 text-[32px] font-extrabold leading-none tabular-nums">
           {value}{unit && <span className="ml-1 text-base font-bold">{unit}</span>}

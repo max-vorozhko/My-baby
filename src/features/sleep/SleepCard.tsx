@@ -113,12 +113,12 @@ export function SleepCard({ child }: { child: Child }) {
             // Тап по назві й часу — змінити час (без окремої плашки «✎ час»).
             <button onClick={() => setEditing(editable)} className="-m-1 rounded-2xl p-1 text-left active:bg-white/10"
               aria-label={sleeping ? `${label}. Змінити час засинання` : `${label}. Змінити час пробудження`}>
-              <p className="text-[20px] font-extrabold leading-tight">{label}</p>
+              <p className="text-[clamp(22px,6.8vw,28px)] font-extrabold leading-tight tracking-tight">{label}</p>
               <p className="mt-0.5 text-[32px] font-extrabold leading-tight tabular-nums">{value}</p>
             </button>
           ) : (
             <>
-              <p className="text-[20px] font-extrabold leading-tight">{label}</p>
+              <p className="text-[clamp(22px,6.8vw,28px)] font-extrabold leading-tight tracking-tight">{label}</p>
               {value && <p className="mt-0.5 text-[32px] font-extrabold leading-tight tabular-nums">{value}</p>}
             </>
           )}
